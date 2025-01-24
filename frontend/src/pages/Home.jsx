@@ -13,10 +13,7 @@ const Home = () => {
 
   return (
     <div
-      className="flex flex-col items-center min-h-screen text-black"
-      style={{
-        background: 'linear-gradient(to bottom right, #F0F8FF, #D9E8F4, #E6F2F7)', 
-      }}
+      className="bg-gradient-to-br from-custom-light-blue via-custom-light-teal to-custom-light-cyan flex flex-col items-center min-h-screen text-black"
     >
       {/* Hero Section */}
       <div className="flex-grow flex flex-col items-center justify-center text-center p-8 mb-10">
