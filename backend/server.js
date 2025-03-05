@@ -1,23 +1,27 @@
 const express = require('express');
+const multer = require("multer");
 const app = express();
 const cors = require('cors');
 const authRoutes = require('./routes/auth');
 const appointmentRoutes = require('./routes/appointment');
 const contactRoutes = require('./routes/contactRoutes');
 const reminderRoutes = require('./routes/reminderRoutes');
-const healthDataRoutes = require('./routes/healthData');
+// const recordRoutes = require("./routes/records");
 const cookieParser = require('cookie-parser');
+const bodyParser = require("body-parser");
 const path = require('path');
 const expressSession = require('express-session')
 const flash = require("connect-flash")
 const killPort = require('kill-port');
 
-require("dotenv").config()
 
+require("dotenv").config()
 const db = require('./config/db');
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(
   expressSession({
@@ -30,12 +34,13 @@ app.use(flash());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(cors());
+app.use("/uploads", express.static("uploads")); 
 
 app.use('/api/auth', authRoutes);
 app.use('/api', appointmentRoutes);
 app.use('/api', contactRoutes);
 app.use("/api", reminderRoutes)
-app.use('/api', healthDataRoutes);
+// app.use("/api", recordRoutes); 
 
 app.use((err, req, res, next) => {
   const statusCode = err.statusCode || 500;

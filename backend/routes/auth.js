@@ -6,6 +6,7 @@ const { login, logout } = require('../controllers/loginController');
 const {getProfile} = require('../controllers/profileController');
 const validateBody = require('../middlewares/validateBody');
 const { authenticate } = require('../middlewares/authMiddleware');
+const {forgotPassword, resetPassword} = require('../controllers/authController');
 
 const errorHandler = (err, req, res, next) => {
   console.error(err);
@@ -32,7 +33,7 @@ router.post(
 
 router.post(
   '/register-doctor',
-  validateBody(['email', 'password', 'firstName', 'lastName', 'contactNumber', 'specialization', 'licenseNumber']),
+  validateBody(['email', 'password', 'firstName', 'lastName', 'contactNumber', 'specialization', 'fees', 'degree']),
   registerDoctor
 );
 
@@ -44,6 +45,9 @@ router.post('/login',
 router.get('/profile', authenticate, getProfile);
 
 router.get("/logout", logout)
+
+router.post('/forgot-password', forgotPassword);
+router.post('/reset-password', resetPassword);
 
 router.use(errorHandler);
 

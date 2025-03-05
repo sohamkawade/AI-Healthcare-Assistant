@@ -1,15 +1,14 @@
-// src/index.js or src/App.js
 import React from 'react';
-import ReactDOM from 'react-dom/client';
+import ReactDOM from 'react-dom'; // No 'client' for older versions
 import App from './App';
-import { AuthProvider } from './context/AuthContext'; // Adjust the path if necessary
+import { AuthProvider } from './context/AuthContext';
 import './index.css';
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(
+ReactDOM.render(
   <React.StrictMode>
     <AuthProvider>
       <App />
     </AuthProvider>
-  </React.StrictMode>
+  </React.StrictMode>,
+  document.getElementById('root')
 );

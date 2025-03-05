@@ -5,7 +5,6 @@ import apiService from '../services/apiService';
 import { AuthContext } from '../context/AuthContext';
 import { motion } from 'framer-motion';
 import "react-toastify/dist/ReactToastify.css";
-import BackButton from '../components/BackButton';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -55,9 +54,7 @@ const Login = () => {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gradient-to-r from-purple-100 via-pink-100 to-blue-100">
-      {/* Back Button */}
-      <BackButton />
+    <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-custom-light-blue via-custom-light-teal to-custom-light-cyan ">
       <motion.div
         className="bg-white shadow-lg rounded-lg p-7 max-w-lg"
         initial={{ opacity: 0, y: -20 }}

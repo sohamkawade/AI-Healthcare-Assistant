@@ -3,8 +3,10 @@ import { jwtDecode } from 'jwt-decode';
 
 
 const API_BASE_URL = "http://localhost:5001/api";
+
 const apiService = {
   baseHeaders: { 'Content-Type': 'application/json' },
+
 
   handleRequest: async (request, headers = {}) => {
     try {
@@ -429,9 +431,84 @@ const apiService = {
       const errorMessage = error.response?.data?.message || error.message || 'Error retrieving health data';
       throw new Error(errorMessage);
     }
-  }
+  },
+
+  addRecord: async (title, description, date, file, patientId) => {
+    try {
+      const formData = new FormData();
+      formData.append("title", title);
+      formData.append("description", description);
+      formData.append("date", date);
+      formData.append("file", file);
+      formData.append("patientId", patientId);
+
+      const response = await axios.post(`${API_BASE_URL}/records`, formData, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "Content-Type": "multipart/form-data", // Required for file uploads
+        },
+      });
+
+      return response.data;
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message || "Error adding record";
+      throw new Error(errorMessage);
+    }
+  },
+
+  getPatientRecords: async (patientId) => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/records/${patientId}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message || "Error retrieving records";
+      throw new Error(errorMessage);
+    }
+  },
+
+  deleteRecord: async (recordId) => {
+    try {
+      const response = await axios.delete(`${API_BASE_URL}/records/${recordId}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message || "Error deleting record";
+      throw new Error(errorMessage);
+    }
+  },
+
+  // Forgot Password API
+  forgotPassword: async (email) => {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/auth/forgot-password`, { email });
+      return response.data;
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message || "Error sending reset link";
+      throw new Error(errorMessage);
+    }
+  },
+
+  // Reset Password API
+  resetPassword: async (token, newPassword) => {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/auth/reset-password`, {
+        token,
+        password: newPassword,
+      });
+      return response.data;
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message || "Error resetting password";
+      throw new Error(errorMessage);
+    }
+  },
 
 };
-
 
 export default apiService;

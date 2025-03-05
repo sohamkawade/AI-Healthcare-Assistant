@@ -6,7 +6,6 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { motion } from 'framer-motion';
 import "react-toastify/dist/ReactToastify.css";
-import BackButton from '../components/BackButton';
 
 const Signup = () => {
   const { registerUser } = useContext(AuthContext);
@@ -99,9 +98,7 @@ const Signup = () => {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gradient-to-r from-purple-100 via-pink-100 to-blue-100">
-       {/* Back Button */}
-       <BackButton />
+    <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-custom-light-blue via-custom-light-teal to-custom-light-cyan">
       <motion.div
         className="w-2/5 max-w-2xl p-7 bg-white rounded-lg shadow-lg"
         initial={{ opacity: 0, y: 30 }}

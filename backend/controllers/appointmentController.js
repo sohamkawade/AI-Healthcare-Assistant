@@ -1,5 +1,4 @@
 const Appointment = require('../models/Appointment');
-const TimeSlot = require('../models/TimeSlot');
 const mongoose = require('mongoose');
 
 // Schedule Appointment

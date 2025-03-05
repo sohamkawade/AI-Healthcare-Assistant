@@ -1,11 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { FaCapsules, FaClock, FaNotesMedical, FaCalendarAlt, FaPills } from "react-icons/fa";
+import {
+  FaCapsules,
+  FaClock,
+  FaNotesMedical,
+  FaCalendarAlt,
+  FaPills,
+} from "react-icons/fa";
 import { toast } from "react-toastify";
 import apiService from "../services/apiService";
-import BackButton from '../components/BackButton';
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
 
 const MedicationReminder = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [medications, setMedications] = useState([]);
   const [medication, setMedication] = useState("");
   const [dose, setDose] = useState("");
@@ -15,7 +24,16 @@ const MedicationReminder = () => {
   const [timeSelected, setTimeSelected] = useState(false);
 
   useEffect(() => {
-    const storedMedications = JSON.parse(localStorage.getItem("medications")) || [];
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+  }, [user]);
+
+  useEffect(() => {
+    const storedMedications =
+      JSON.parse(localStorage.getItem("medications")) || [];
     setMedications(storedMedications);
   }, []);
 
@@ -25,13 +43,21 @@ const MedicationReminder = () => {
       setMedications((prevMedications) =>
         prevMedications
           .map((med) => {
-            if (med.time && new Date(med.time).getTime() <= currentTime && !med.notified) {
-              toast.info(`Time to take your medication: ${med.medication}`, { theme: "colored" });
+            if (
+              med.time &&
+              new Date(med.time).getTime() <= currentTime &&
+              !med.notified
+            ) {
+              toast.info(`Time to take your medication: ${med.medication}`, {
+                theme: "colored",
+              });
               return { ...med, notified: true };
             }
             return med;
           })
-          .filter((med) => new Date(med.time).getTime() > currentTime || !med.notified)
+          .filter(
+            (med) => new Date(med.time).getTime() > currentTime || !med.notified
+          )
       );
     }, 60000);
 
@@ -43,9 +69,17 @@ const MedicationReminder = () => {
       const currentTime = new Date().getTime();
       setMedications((prevMedications) =>
         prevMedications.filter((med) => {
-          if (med.notified && new Date(med.time).getTime() + 5 * 60000 < currentTime) {
-            const updatedMedications = prevMedications.filter((item) => item._id !== med._id);
-            localStorage.setItem("medications", JSON.stringify(updatedMedications));
+          if (
+            med.notified &&
+            new Date(med.time).getTime() + 5 * 60000 < currentTime
+          ) {
+            const updatedMedications = prevMedications.filter(
+              (item) => item._id !== med._id
+            );
+            localStorage.setItem(
+              "medications",
+              JSON.stringify(updatedMedications)
+            );
             return false;
           }
           return true;
@@ -81,16 +115,26 @@ const MedicationReminder = () => {
 
       try {
         const response = await apiService.createReminder(newMedication);
-        if (response && response.medication && response.dose && response.time && response._id) {
+        if (
+          response &&
+          response.medication &&
+          response.dose &&
+          response.time &&
+          response._id
+        ) {
           setMedications((prevMedications) => [...prevMedications, response]);
           setMedication("");
           setDose("");
           setTime("");
           setError("");
-          toast.success("Medication reminder added successfully!", { theme: "colored" });
+          toast.success("Medication reminder added successfully!", {
+            theme: "colored",
+          });
         } else {
           setError("Invalid data in API response.");
-          toast.error("Failed to add medication reminder.", { theme: "colored" });
+          toast.error("Failed to add medication reminder.", {
+            theme: "colored",
+          });
         }
       } catch (error) {
         setError("Failed to add medication reminder.");
@@ -107,16 +151,27 @@ const MedicationReminder = () => {
       const response = await apiService.deleteReminder(id);
       if (response && response.message === "Reminder deleted successfully") {
         setMedications((prevMedications) => {
-          const updatedMedications = prevMedications.filter((med) => med._id !== id);
-          localStorage.setItem("medications", JSON.stringify(updatedMedications));
+          const updatedMedications = prevMedications.filter(
+            (med) => med._id !== id
+          );
+          localStorage.setItem(
+            "medications",
+            JSON.stringify(updatedMedications)
+          );
           return updatedMedications;
         });
-        toast.success("Medication reminder deleted successfully!", { theme: "colored" });
+        toast.success("Medication reminder deleted successfully!", {
+          theme: "colored",
+        });
       } else {
-        toast.error("Failed to delete medication reminder.", { theme: "colored" });
+        toast.error("Failed to delete medication reminder.", {
+          theme: "colored",
+        });
       }
     } catch (error) {
-      toast.error("An error occurred while deleting the medication reminder.", { theme: "colored" });
+      toast.error("An error occurred while deleting the medication reminder.", {
+        theme: "colored",
+      });
     }
   };
 
@@ -127,8 +182,7 @@ const MedicationReminder = () => {
         setMedications(response);
         localStorage.setItem("medications", JSON.stringify(response));
       }
-    }
-    catch (error) {
+    } catch (error) {
       console.error(error);
     }
   };
@@ -140,31 +194,34 @@ const MedicationReminder = () => {
   const doses = ["250mg", "500mg", "750mg", "1000mg"];
 
   return (
-    <div className="flex flex-col items-center bg-gradient-to-r from-purple-100 via-pink-100 to-blue-100 min-h-screen p-6">
-      {/* Back Button */}
-      <BackButton />
+    <div className="flex flex-col items-center bg-gradient-to-br from-custom-light-blue via-custom-light-teal to-custom-light-cyan">
       <motion.div
         initial={{ opacity: 0, translateY: -20 }}
         animate={{ opacity: 1, translateY: 0 }}
         transition={{ duration: 0.5 }}
-        className="bg-white shadow-xl rounded-xl p-6 w-full max-w-md"
+        className="bg-white shadow-xl rounded-xl p-6 w-full max-w-md mt-6"
       >
-        <h2 className="text-3xl font-semibold text-center text-indigo-700 mb-6 flex items-center justify-center">
+        <h2 className="text-3xl font-semibold text-center text-indigo-700 mb-6 flex items-center justify-center ">
           <FaNotesMedical className="w-10 h-10 mr-2 text-indigo-500" />
           Medication Reminder
         </h2>
 
         <button
           onClick={() => setShowReminderForm((prev) => !prev)}
-          className={`w-full ${showReminderForm ? "bg-red-500" : "bg-gradient-to-r from-blue-400 to-teal-500"
-            } text-white font-semibold py-2 rounded-lg hover:opacity-90 transition duration-300 mb-6`}
+          className={`w-full ${
+            showReminderForm
+              ? "bg-red-500"
+              : "bg-gradient-to-r from-blue-400 to-teal-500"
+          } text-white font-semibold py-2 rounded-lg hover:opacity-90 transition duration-300 mb-6`}
         >
           {showReminderForm ? "Close Reminder Form" : "Add Medication Reminder"}
         </button>
 
         {showReminderForm && (
           <form onSubmit={handleAddMedication} className="space-y-4">
-            {error && <p className="text-red-500 text-sm font-medium">{error}</p>}
+            {error && (
+              <p className="text-red-500 text-sm font-medium">{error}</p>
+            )}
             <motion.div
               className="flex items-center border border-gray-300 rounded-lg p-2 bg-gray-50"
               initial={{ opacity: 0, translateY: -20 }}
@@ -218,8 +275,9 @@ const MedicationReminder = () => {
                   setTime(e.target.value);
                   setTimeSelected(true);
                 }}
-                className={`flex-1 bg-transparent outline-none text-gray-700 cursor-${timeSelected ? "default" : "pointer"
-                  }`}
+                className={`flex-1 bg-transparent outline-none text-gray-700 cursor-${
+                  timeSelected ? "default" : "pointer"
+                }`}
                 required
               />
             </motion.div>
@@ -237,7 +295,9 @@ const MedicationReminder = () => {
       {medications.length === 0 ? (
         <div className="text-center mt-6 text-gray-700">
           <FaCalendarAlt className="w-12 h-12 text-indigo-500 mb-4 mx-auto" />
-          <p className="font-semibold text-xl text-gray-900">No reminders set yet. Add your first reminder now!</p>
+          <p className="font-semibold text-xl text-gray-900">
+            No reminders set yet. Add your first reminder now!
+          </p>
         </div>
       ) : (
         <ul className="mt-6 flex flex-wrap justify-center space-x-6">
@@ -252,20 +312,18 @@ const MedicationReminder = () => {
               <div className="flex flex-col mb-4">
                 <p className="font-bold text-black text-sm mt-2 mb-1">
                   Medication:{" "}
-                  <span className="font-normal">
-                  {med.medication}
-                  </span>
+                  <span className="font-normal">{med.medication}</span>
                 </p>
                 <p className="text-black text-sm font-bold mb-1">
-                  Dose:{" "}
-                  <span className="font-normal">
-                  {med.dose}
-                  </span>
+                  Dose: <span className="font-normal">{med.dose}</span>
                 </p>
                 <p className="text-black text-sm font-bold">
                   Reminder Time:{" "}
                   <span className="font-normal">
-                    {new Date(med.time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                    {new Date(med.time).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
                   </span>
                 </p>
               </div>

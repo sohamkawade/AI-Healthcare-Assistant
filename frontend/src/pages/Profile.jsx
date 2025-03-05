@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useAuth } from '../hooks/useAuth';
 import apiService from '../services/apiService';
-import { FaUserMd, FaEnvelope, FaMapMarkerAlt, FaPhone, FaCalendarAlt, FaIdCard } from 'react-icons/fa'; // Importing relevant icons
+import { FaUserMd, FaEnvelope, FaMapMarkerAlt, FaPhone, FaCalendarAlt } from 'react-icons/fa'; 
+import { GraduationCap, HeartPulse } from "lucide-react";
 import { motion } from 'framer-motion'; 
-import BackButton from '../components/BackButton';
 
 const Profile = () => {
   const { user, setUser, loading, logout } = useAuth();
@@ -70,7 +70,7 @@ const Profile = () => {
 
   if (!user) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-gradient-to-r from-indigo-100 via-purple-100 to-pink-100 ">
+      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-custom-light-blue via-custom-light-teal to-custom-light-cyan">
         <motion.div
           animate={{ opacity: [0, 1, 0] }}
           transition={{ duration: 2, repeat: Infinity }}
@@ -83,9 +83,7 @@ const Profile = () => {
   }
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 ">
-       {/* Back Button */}
-       <BackButton />
+    <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-custom-light-blue via-custom-light-teal to-custom-light-cyan ">
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -208,31 +206,31 @@ const Profile = () => {
             className="grid grid-cols-1 sm:grid-cols-2 gap-4" // Adjusted gap
           >
             <motion.div
-              initial={{ x: -50, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ duration: 0.8 }}
-              className="flex items-center bg-purple-50 p-3 rounded-lg shadow-md" // Adjusted padding
-            >
-              <FaUserMd className="text-purple-500 w-6 h-6 mr-3" />
-              <div>
-                <p className="text-gray-700 text-base font-medium">Specialization</p>
-                <p className="text-gray-500 text-sm">{user.specialization || 'Not Provided'}</p>
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ x: 50, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ duration: 0.8 }}
-              className="flex items-center bg-purple-50 p-3 rounded-lg shadow-md" // Adjusted padding
-            >
-              <FaIdCard className="text-purple-500 w-6 h-6 mr-3" />
-              <div>
-                <p className="text-gray-700 text-base font-medium">License Number</p>
-                <p className="text-gray-500 text-sm">{user.licenseNumber || 'Not Provided'}</p>
-              </div>
-            </motion.div>
+            initial={{ x: -50, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ duration: 0.6 }}
+            className="flex items-center bg-purple-50 p-3 rounded-lg shadow-md" // Adjusted padding
+          >
+            <HeartPulse className="text-purple-500 w-6 h-6 mr-3" />
+            <div>
+              <p className="text-gray-700 text-base font-medium">Specialization</p>
+              <p className="text-gray-500 text-sm">{user.specialization}</p>
+            </div>
           </motion.div>
+
+          <motion.div
+            initial={{ x: 50, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ duration: 0.6 }}
+            className="flex items-center bg-purple-50 p-3 rounded-lg shadow-md" // Adjusted padding
+          >
+            <GraduationCap className="text-purple-500 w-6 h-6 mr-3" />
+            <div>
+              <p className="text-gray-700 text-base font-medium">Degree</p>
+              <p className="text-gray-500 text-sm">{user.degree}</p>
+            </div>
+          </motion.div>
+        </motion.div>
         )}
 
         <div className="flex justify-end mt-6">
@@ -254,3 +252,5 @@ const Profile = () => {
 };
 
 export default Profile;
+
+

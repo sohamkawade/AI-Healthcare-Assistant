@@ -41,27 +41,5 @@ const appointmentSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Pre-save middleware to mark the associated time slot as booked
-appointmentSchema.pre('save', async function (next) {
-  const timeSlot = await mongoose.model('TimeSlot').findById(this.timeSlot);
-  if (!timeSlot || timeSlot.isBooked) {
-    return next(new Error('Time slot is not available.'));
-  }
-
-  timeSlot.isBooked = true;
-  timeSlot.status = 'Booked';
-  await timeSlot.save();
-  next();
-});
-
-// Post-remove middleware to mark the associated time slot as available
-appointmentSchema.post('remove', async function (doc) {
-  const timeSlot = await mongoose.model('TimeSlot').findById(doc.timeSlot);
-  if (timeSlot) {
-    timeSlot.isBooked = false;
-    timeSlot.status = 'Available';
-    await timeSlot.save();
-  }
-});
 
 module.exports = mongoose.model('Appointment', appointmentSchema, 'Appointments');

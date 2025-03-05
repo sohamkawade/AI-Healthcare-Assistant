@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import { FaCreditCard, FaCalendarAlt, FaLock } from 'react-icons/fa';
-import BackButton from '../components/BackButton';
-
 const BillingDashboard = () => {
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -42,9 +40,7 @@ const BillingDashboard = () => {
   };
 
   return (
-    <div className="flex flex-col w-full p-8 bg-gradient-to-br from-blue-50 to-blue-100 shadow-xl rounded-lg max-w-5xl mx-auto">
-       {/* Back Button */}
-       <BackButton />
+    <div className="flex flex-col w-full p-8 bg-gradient-to-br from-custom-light-blue via-custom-light-teal to-custom-light-cyan shadow-xl rounded-lg max-w-5xl mx-auto">
       {/* Header */}
       <header className="flex justify-between items-center p-4 border-b border-gray-300">
         <h1 className="text-3xl font-bold text-blue-800">Billing Dashboard</h1>

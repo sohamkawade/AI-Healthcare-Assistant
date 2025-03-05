@@ -1,17 +1,17 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { FaUserCircle, FaBars, FaTimes, FaMoon } from "react-icons/fa";
-import { MdWbSunny } from 'react-icons/md';
+import { FaUserCircle, FaBars, FaTimes } from "react-icons/fa";
 import logo from "../assets/logo.png";
 
 const Navbar = () => {
   const navigate = useNavigate();
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
-  const [isDarkMode, setIsDarkMode] = useState(false);
 
-  const handleProfileClick = () => {
-    navigate("/profile");
+  const handleNavigate = (path) => {
+    setMobileMenuOpen(false);
+    setActiveDropdown(null);
+    navigate(path);
   };
 
   const toggleMobileMenu = () => {
@@ -19,36 +19,25 @@ const Navbar = () => {
   };
 
   const handleDropdownEnter = (dropdown) => {
-    setActiveDropdown(dropdown); 
+    setActiveDropdown(dropdown);
   };
 
   const handleDropdownLeave = () => {
-    setActiveDropdown(null); 
+    setActiveDropdown(null);
   };
 
   const handleDropdownItemClick = (path) => {
-    setActiveDropdown(null); 
-    setMobileMenuOpen(false); 
-    navigate(path);
+    handleNavigate(path);
+    setActiveDropdown(null);
   };
 
-  const toggleDarkMode = () => {
-    setIsDarkMode((prevMode) => !prevMode);
+  const handleProfileClick = () => {
+    handleNavigate("/profile");
   };
-
-  useEffect(() => {
-
-    if (isDarkMode) {
-      document.body.classList.add("dark");
-    } else {
-      document.body.classList.remove("dark");
-    }
-  }, [isDarkMode]);
 
   return (
-    <nav className="top-0 left-0 right-0 z-50 p-4 font-sans">
+    <nav className="top-0 left-0 right-0 z-50 p-4 font-sans border-b border-gray-400 pb-4 w-[90%] mx-auto">
       <div className="container mx-auto flex justify-between items-center">
-        {/* Logo */}
         <div className="flex items-center">
           <img
             src={logo}
@@ -60,7 +49,6 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* Desktop Menu */}
         <div className="hidden md:flex space-x-8 items-center ml-20">
           <Link
             to="/about"
@@ -75,7 +63,6 @@ const Navbar = () => {
             Contact
           </Link>
 
-          {/* Features Dropdown */}
           <div
             className="relative dropdown"
             onMouseEnter={() => handleDropdownEnter("features")}
@@ -103,49 +90,6 @@ const Navbar = () => {
               >
                 Medication Reminder
               </div>
-              <div
-                className="block px-4 py-2 hover:bg-blue-100 transition duration-200 cursor-pointer scale-95 hover:scale-105"
-                onClick={() => handleDropdownItemClick("/health-tracker")}
-              >
-                Health Tracker
-              </div>
-            </div>
-          </div>
-
-          {/* Health Management Dropdown */}
-          <div
-            className="relative dropdown"
-            onMouseEnter={() => handleDropdownEnter("healthManagement")}
-            onMouseLeave={handleDropdownLeave}
-          >
-            <button className="text-black hover:text-purple-700 text-lg font-medium focus:outline-none transition duration-300 transform hover:scale-105 cursor-pointer">
-              Health Management
-            </button>
-            <div
-              className={`absolute z-10 bg-white text-black shadow-lg mt-2 rounded transition-all ease-in-out duration-500 max-h-0 overflow-hidden ${
-                activeDropdown === "healthManagement"
-                  ? "max-h-[500px] opacity-100"
-                  : "max-h-0 opacity-0"
-              }`}
-            >
-              <div
-                className="block px-4 py-2 hover:bg-blue-100 transition duration-200 cursor-pointer scale-95 hover:scale-105"
-                onClick={() => handleDropdownItemClick("/billing-dashboard")}
-              >
-                Billing Dashboard
-              </div>
-              <div
-                className="block px-4 py-2 hover:bg-blue-100 transition duration-200 cursor-pointer scale-95 hover:scale-105"
-                onClick={() => handleDropdownItemClick("/engagement-hub")}
-              >
-                Engagement Hub
-              </div>
-              <div
-                className="block px-4 py-2 hover:bg-blue-100 transition duration-200 cursor-pointer scale-95 hover:scale-105"
-                onClick={() => handleDropdownItemClick("/chatbot")}
-              >
-                Chatbot
-              </div>
             </div>
           </div>
 
@@ -169,7 +113,6 @@ const Navbar = () => {
           </Link>
         </div>
 
-        {/* Mobile Menu Icon */}
         <div className="md:hidden flex items-center">
           <button
             onClick={toggleMobileMenu}
@@ -179,18 +122,7 @@ const Navbar = () => {
           </button>
         </div>
 
-        {/* Centered Icons and Links */}
-        <div className="flex items-center space-x-4 ">
-          {/* Dark/Light Mode Toggle Icon */}
-          <button onClick={toggleDarkMode} className="text-2xl ">
-            {isDarkMode ? (
-              <MdWbSunny className="text-white transition duration-300" />
-            ) : (
-              <FaMoon className="text-black" />
-            )}
-          </button>
-
-          {/* Profile Icon */}
+        <div className="flex items-center space-x-4">
           <button
             onClick={handleProfileClick}
             className="text-purple-700 hover:text-purple-900 transition duration-300 flex items-center"
@@ -199,62 +131,6 @@ const Navbar = () => {
           </button>
         </div>
       </div>
-
-      {/* Mobile Menu Dropdown */}
-      {isMobileMenuOpen && (
-        <div className="md:hidden bg-blue-800 text-black space-y-4 py-4 px-6 transition-transform transform translate-y-0">
-          <Link
-            to="/about"
-            className="block text-lg font-medium transition duration-300 hover:underline cursor-pointer"
-            onClick={() => handleDropdownItemClick("/about")}
-          >
-            About
-          </Link>
-          <Link
-            to="/contact"
-            className="block text-lg font-medium transition duration-300 hover:underline cursor-pointer"
-            onClick={() => handleDropdownItemClick("/contact")}
-          >
-            Contact
-          </Link>
-
-          {/* Features Dropdown for Mobile */}
-          <div className="relative">
-            <button
-              className="block text-lg font-medium transition duration-300 hover:underline cursor-pointer"
-              onClick={() => handleDropdownEnter("features")}
-            >
-              Features
-            </button>
-            <div
-              className={`bg-black text-black mt-2 rounded shadow-lg cursor-pointer ${
-                activeDropdown === "features"
-                  ? "max-h-[500px] opacity-100"
-                  : "max-h-0 opacity-0"
-              }`}
-            >
-              <div
-                className="block px-4 py-2 hover:bg-blue-100 transition duration-200 cursor-pointer scale-95 hover:scale-105"
-                onClick={() => handleDropdownItemClick("/video-consultation")}
-              >
-                Video Consultation
-              </div>
-              <div
-                className="block px-4 py-2 hover:bg-blue-100 transition duration-200 cursor-pointer scale-95 hover:scale-105"
-                onClick={() => handleDropdownItemClick("/medication-reminder")}
-              >
-                Medication Reminder
-              </div>
-              <div
-                className="block px-4 py-2 hover:bg-blue-100 transition duration-200 cursor-pointer scale-95 hover:scale-105"
-                onClick={() => handleDropdownItemClick("/health-tracker")}
-              >
-                Health Tracker
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </nav>
   );
 };
