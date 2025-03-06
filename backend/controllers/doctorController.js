@@ -77,36 +77,6 @@ module.exports.registerDoctor = async (req, res) => {
   }
 };
 
-// This version fully removes licenseNumber — let me know if you need anything else! 🚀
-// Add predefined time slots for multiple doctors
-module.exports.addPredefinedTimeSlotsForMultipleDoctors = async (req, res) => {
-  try {
-    const { doctors } = req.body;
-
-    if (!Array.isArray(doctors) || doctors.length === 0) {
-      return res.status(400).json({ message: 'Doctors array is required and cannot be empty.' });
-    }
-
-    for (const { doctorId, timeSlots } of doctors) {
-      const doctor = await Doctor.findById(doctorId);
-      if (!doctor) {
-        console.warn(`Doctor with ID ${doctorId} not found. Skipping.`);
-        continue;
-      }
-
-      timeSlots.forEach((slot) => {
-        doctor.predefinedTimeSlots.push({ date: new Date(slot.date), slots: slot.slots });
-      });
-      await doctor.save();
-    }
-
-    res.status(200).json({ message: 'Predefined time slots added successfully for all doctors.' });
-  } catch (error) {
-    console.error('Error adding time slots:', error);
-    res.status(500).json({ message: 'Error adding time slots', error: error.message });
-  }
-};
-
 
 // Get doctors with pagination and filtering
 module.exports.getDoctors = async (req, res) => {

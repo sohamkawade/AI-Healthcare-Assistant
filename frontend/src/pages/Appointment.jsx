@@ -1,297 +1,356 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import apiService from "../services/apiService";
+import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../hooks/useAuth";
-import {
-  FaUserMd,
-  FaBriefcaseMedical,
-  FaCalendarAlt,
-  FaUser,
-  FaEnvelope,
-  FaPhone,
-  FaClock,
-  FaCheckCircle,
-  FaTimesCircle,
-} from "react-icons/fa";
+import doctorImage from "../assets/doctor.jpg"; // Adjust this path if necessary
+
+const daysOfWeek = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 
 const Appointment = () => {
-  const { user } = useAuth();
   const navigate = useNavigate();
   const [doctors, setDoctors] = useState([]);
-  const [timeSlots, setTimeSlots] = useState([]);
-  const [selectedDoctor, setSelectedDoctor] = useState("");
-  const [selectedDate, setSelectedDate] = useState("");
-  const [selectedDay, setSelectedDay] = useState("");
-  const [appointmentType, setAppointmentType] = useState("");
-  const [doctorDetails, setDoctorDetails] = useState(null);
-  const [loading, setLoading] = useState(false);
-
-  // Days of the week for selection
-  const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+  const [selectedDoctor, setSelectedDoctor] = useState(null);
+  const [slotIndex, setSlotIndex] = useState(0);
+  const [slotTime, setSlotTime] = useState("");
+  const [isAuthenticated, setIsAuthenticated] = useState(false); // Add isAuthenticated state
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (!token) {
+    const userId = localStorage.getItem("userId");
+
+    console.log("UserId from localStorage in useEffect:", userId);
+
+    if (!token || !userId) {
       navigate("/login");
       return;
     }
-  }, [user]);
-
-  useEffect(() => {
-    const fetchDoctors = async () => {
-      setLoading(true);
-      try {
-        const response = await apiService.getDoctors();
-        if (response.success) {
-          setDoctors(response.data);
-        } else {
-          toast.error("Failed to fetch doctors");
-        }
-      } catch (error) {
-        toast.error("Error fetching doctors");
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchDoctors();
   }, []);
 
-  const fetchTimeSlots = async (doctorId, date) => {
-    setLoading(true);
+  const fetchDoctors = async () => {
     try {
-      const response = await apiService.getAvailableTimeSlots(doctorId, date);
-      if (response && response.length) {
-        const unbookedSlots = response.filter((slot) => !slot.isBooked);
-        setTimeSlots(unbookedSlots);
+      const token = localStorage.getItem("token");
+      if (!token) {
+        toast.error("Please login to view doctors.");
+        return;
+      }
+
+      const response = await axios.get("http://localhost:5001/api/doctors", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.data && response.data.data) {
+        const availableDoctors = response.data.data.filter(
+          (doc) => doc.available === true
+        );
+
+        if (availableDoctors.length === 0) {
+          toast.error(
+            "No doctors are available right now. Please try again later."
+          );
+        } else {
+          setDoctors(availableDoctors);
+          setSelectedDoctor(availableDoctors[0]); // Set the first doctor as default
+        }
       } else {
-        setTimeSlots([]);
-        toast.info("No available time slots for the selected doctor and date.");
+        toast.error("No doctor data found.");
       }
     } catch (error) {
-      toast.error("Error fetching time slots");
-    } finally {
-      setLoading(false);
+      toast.error("Failed to fetch doctors. Please try again.");
     }
   };
 
-  const handleDoctorChange = (doctorId) => {
-    setSelectedDoctor(doctorId);
-    setDoctorDetails(null);
-    setSelectedDate("");
-    setSelectedDay("");
-    setTimeSlots([]);
+  // Creating appointment slots dynamically for the next 7 days
+  const docSlots = Array(7)
+    .fill(0)
+    .map((_, i) => {
+      return Array(5)
+        .fill(0)
+        .map((_, j) => {
+          let date = new Date();
+          date.setDate(date.getDate() + i);
+          date.setHours(10 + j * 2, 0, 0, 0); // Time slots at 10:00, 12:00, 2:00, etc.
+          return {
+            datetime: date,
+            time: date.toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+          };
+        });
+    });
 
-    if (doctorId) {
-      const selectedDoc = doctors.find((doc) => doc._id === doctorId);
-      setDoctorDetails(selectedDoc);
-    }
-  };
-
-  const handleDateChange = (e) => {
-    const selectedDate = e.target.value;
-    setSelectedDate(selectedDate);
-
-    const isValidDate = /^\d{4}-\d{2}-\d{2}$/.test(selectedDate);
-
-    if (!isValidDate) {
-      toast.error("Invalid date format. Please select a valid date.");
-      return;
-    }
-
-    if (selectedDoctor) {
-      fetchTimeSlots(selectedDoctor, selectedDate);
-    }
-  };
-
-  const handleDayChange = (day) => {
-    setSelectedDay(day);
-    // You can add logic here to fetch time slots based on the selected day
-  };
-
-  const handleSchedule = async (e) => {
-    e.preventDefault();
-
-    if (!selectedDoctor || !selectedDate || !appointmentType || timeSlots.length === 0) {
-      toast.error("Please fill all the fields");
-      return;
-    }
-
-    const selectedTimeSlot = timeSlots[0];
-
-    const appointmentDetails = {
-      patientId: user.id,
-      doctorId: selectedDoctor,
-      timeSlot: {
-        startTime: selectedTimeSlot.startTime,
-        endTime: selectedTimeSlot.endTime,
-      },
-      appointmentType,
-      date: selectedDate,
+    const bookAppointment = async () => {
+      // Retrieve token and userId from localStorage
+      const token = localStorage.getItem("token");
+      const userId = localStorage.getItem("userId");
+    
+      // Check if token and userId are available
+      if (!token || !userId) {
+        toast.error("Please log in to book an appointment.");
+        return;
+      }
+    
+      // Log the token and userId for debugging purposes
+      console.log("Token:", token);
+      console.log("User ID:", userId);
+    
+      // Format the slot time
+      const formattedSlotTime = formatSlotTime(slotTime);
+    
+      // Check if the formatted slot time is valid
+      if (!formattedSlotTime) {
+        toast.error("Invalid slot time format.");
+        return;
+      }
+    
+      // Log the formatted slot time
+      console.log("Formatted Slot Time:", formattedSlotTime);
+    
+      // Check selected doctor details before sending the request
+      console.log("Selected Doctor:", selectedDoctor);
+    
+      // If selectedDoctor or selectedDoctor._id is invalid, show an error
+      if (!selectedDoctor || !selectedDoctor._id) {
+        toast.error("Doctor not selected or invalid doctor.");
+        return;
+      }
+    
+      // Construct the request data payload
+      const requestData = {
+        doctorId: selectedDoctor._id,  // Ensure this field matches the backend's expectations
+        userId: userId,
+        date: formattedSlotTime,
+        time: slotTime,
+      };
+    
+      // Log the request data before sending the API request
+      console.log("Request Data:", requestData);
+    
+      try {
+        // Send POST request to book the appointment
+        const response = await axios.post(
+          "http://localhost:5001/api/appointments/book",
+          requestData,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+    
+        // Log the server response for debugging purposes
+        console.log("Response Data:", response.data);
+    
+        // Check if the response status is 200 (success)
+        if (response.status === 200) {
+          toast.success("Appointment booked successfully.");
+        } else {
+          // Show a detailed error message if the booking fails
+          toast.error(
+            `Failed to book appointment: ${
+              response.data.message || "Unknown error"
+            }`
+          );
+        }
+      } catch (error) {
+        // Handle and log errors that occur during the request
+        console.error("Error booking appointment:", error);
+    
+        // Check if the error has a response from the server
+        if (error.response) {
+          console.error("Error response data:", error.response.data);
+    
+          // Show error toast with the message from the backend response
+          toast.error(
+            `Failed to book appointment: ${
+              error.response?.data?.message || "Unknown error"
+            }`
+          );
+        } else {
+          // If no response, show a generic error message
+          console.error("Error message:", error.message);
+          toast.error(`Failed to book appointment: ${error.message}`);
+        }
+      }
     };
+    
 
-    setLoading(true);
-
-    try {
-      await apiService.scheduleAppointment(appointmentDetails);
-      toast.success("Appointment scheduled successfully");
-    } catch (error) {
-      toast.error("Failed to schedule appointment");
-    } finally {
-      setLoading(false);
+  // Helper function to format slot time
+  const formatSlotTime = (slotTime) => {
+    // Check if the slotTime is provided and correctly formatted
+    if (!slotTime || !slotTime.includes(" ")) {
+      console.error("Invalid slot time format:", slotTime);
+      return null; // Return null if the time format is invalid
     }
+
+    // Split the time and period (AM/PM)
+    const timeParts = slotTime.split(" ");
+    const time = timeParts[0]; // "10:00"
+    const period = timeParts[1]; // "am" or "pm"
+
+    // Validate time format (hh:mm)
+    if (!/^\d{1,2}:\d{2}$/.test(time)) {
+      console.error("Invalid time format:", time);
+      return null; // Return null if the time is not in the correct format
+    }
+
+    // Get current date (today)
+    const today = new Date();
+    const todayDate = today.toISOString().split("T")[0]; // "YYYY-MM-DD" format
+
+    // Convert the time string into a 24-hour format for correct parsing
+    let [hours, minutes] = time.split(":").map(Number);
+
+    if (period === "pm" && hours !== 12) {
+      hours += 12; // Convert PM hours (except 12 pm which is already correct)
+    }
+
+    if (period === "am" && hours === 12) {
+      hours = 0; // Convert 12 am to 00:00
+    }
+
+    // Ensure hours and minutes are two digits
+    const formattedTimeString = `${todayDate}T${String(hours).padStart(
+      2,
+      "0"
+    )}:${String(minutes).padStart(2, "0")}:00`;
+
+    const formattedDate = new Date(formattedTimeString);
+
+    // Validate if the date is correct
+    if (isNaN(formattedDate.getTime())) {
+      console.error("Invalid time value:", slotTime);
+      return null; // Return null if the time is invalid or parsing fails
+    }
+
+    // Return the correctly formatted ISO string
+    return formattedDate.toISOString(); // Example: "2025-03-06T15:30:00.000Z"
   };
 
   return (
-    <div className="flex justify-center items-center p-8 min-h-screen bg-gradient-to-br from-custom-light-blue via-custom-light-teal to-custom-light-cyan">
-      <div className="container mx-auto bg-white p-8 rounded-xl shadow-2xl">
-        <h1 className="text-3xl font-bold text-blue-900 mb-8 text-center">Book Your Appointment</h1>
-
-        {/* Patient Information */}
-        <div className="bg-blue-50 p-6 rounded-lg mb-8">
-          <h2 className="text-xl font-semibold text-blue-900 mb-4">Patient Information</h2>
-          <div className="space-y-3">
-            <p className="flex items-center text-blue-800">
-              <FaUser className="mr-2 text-blue-600" /> {user?.firstName} {user?.lastName}
-            </p>
-            <p className="flex items-center text-blue-800">
-              <FaEnvelope className="mr-2 text-blue-600" /> {user?.email}
-            </p>
-            <p className="flex items-center text-blue-800">
-              <FaPhone className="mr-2 text-blue-600" /> {user?.contactNumber}
-            </p>
-            <p className="flex items-center text-blue-800">
-              <FaCalendarAlt className="mr-2 text-blue-600" /> {user.birthdate?.split("T")[0]}
-            </p>
-          </div>
-        </div>
-
-        {/* Doctor Selection */}
-        <div className="bg-blue-50 p-6 rounded-lg mb-8">
-          <h2 className="text-xl font-semibold text-blue-900 mb-4">Select Doctor</h2>
-          <select
-            value={selectedDoctor}
-            onChange={(e) => handleDoctorChange(e.target.value)}
-            className="w-full p-3 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="" disabled>--Select Doctor--</option>
-            {doctors.map((doctor) => (
-              <option key={doctor._id} value={doctor._id}>
-                Dr. {doctor.firstName} {doctor.lastName} ({doctor.specialization})
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Doctor Details */}
-        {doctorDetails && (
-          <div className="bg-blue-50 p-6 rounded-lg mb-8">
-            <h2 className="text-xl font-semibold text-blue-900 mb-4">Doctor Details</h2>
-            <div className="space-y-3">
-              <p className="flex items-center text-blue-800">
-                <FaUserMd className="mr-2 text-blue-600" /> Dr. {doctorDetails.firstName} {doctorDetails.lastName}
-              </p>
-              <p className="flex items-center text-blue-800">
-                <FaBriefcaseMedical className="mr-2 text-blue-600" /> Specialty: {doctorDetails.specialization}
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Day Selection */}
-        <div className="bg-blue-50 p-6 rounded-lg mb-8">
-          <h2 className="text-xl font-semibold text-blue-900 mb-4">Select Day</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4">
-            {daysOfWeek.map((day) => (
-              <div
-                key={day}
-                onClick={() => handleDayChange(day)}
-                className={`p-4 text-center rounded-lg cursor-pointer ${
-                  selectedDay === day ? "bg-blue-600 text-white" : "bg-white text-blue-900 border border-blue-300"
-                }`}
-              >
-                {day}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Date and Time Selection */}
-        <div className="bg-blue-50 p-6 rounded-lg mb-8">
-          <h2 className="text-xl font-semibold text-blue-900 mb-4">Select Date and Time</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-blue-900 mb-2">Select Date</label>
-              <input
-                type="date"
-                value={selectedDate}
-                onChange={handleDateChange}
-                className="w-full p-3 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-blue-900 mb-2">Appointment Type</label>
-              <select
-                value={appointmentType}
-                onChange={(e) => setAppointmentType(e.target.value)}
-                className="w-full p-3 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="" disabled>--Select Type--</option>
-                <option value="Consultation">Consultation</option>
-                <option value="Follow-up">Follow-up</option>
-                <option value="Emergency">Emergency</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Time Slots */}
-          {loading ? (
-            <div className="text-center text-blue-900 mt-6">Loading time slots...</div>
-          ) : selectedDoctor && selectedDate ? (
-            timeSlots.length > 0 ? (
-              <div className="mt-6">
-                <h3 className="text-lg font-semibold text-blue-900 mb-4">Available Time Slots</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {timeSlots.map((slot) => (
-                    <div
-                      key={slot._id}
-                      className="p-4 bg-white border border-blue-200 rounded-lg hover:bg-blue-50 cursor-pointer"
-                      onClick={() => setSelectedTimeSlot(slot.startTime)}
+    <div className="p-6 max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
+      {doctors.length > 0 ? (
+        <>
+          {/* Doctor Selection */}
+          <div className="pr-4">
+            <h2 className="text-3xl font-bold mb-6">Select a Doctor</h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+              {doctors.map((doctor) => (
+                <div
+                  key={doctor._id}
+                  onClick={() => setSelectedDoctor(doctor)}
+                  className={`bg-white rounded-lg shadow-md p-4 cursor-pointer transition-all duration-300 ease-in-out transform hover:scale-105 hover:shadow-xl 
+                    border border-gray-300 hover:border-blue-500 
+                    ${
+                      selectedDoctor?._id === doctor._id
+                        ? "border-2 border-blue-500"
+                        : ""
+                    }`}
+                >
+                  <div className="w-full aspect-square">
+                    <img
+                      src={doctor.image || doctorImage} // Use a default image if doctor.image is not available
+                      alt={`${doctor.firstName} ${doctor.lastName}`}
+                      className="w-full h-full object-cover rounded-lg"
+                    />
+                  </div>
+                  <div className="mt-4 text-center">
+                    <span
+                      className={`font-medium ${
+                        doctor.available ? "text-green-500" : "text-red-500"
+                      }`}
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center">
-                          <FaClock className="mr-2 text-blue-600" />
-                          <span className="text-blue-900">
-                            {slot.startTime} - {slot.endTime}
-                          </span>
-                        </div>
-                        {slot.isBooked ? (
-                          <FaTimesCircle className="text-red-500" />
-                        ) : (
-                          <FaCheckCircle className="text-green-500" />
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                      ● {doctor.available ? "Available" : "Unavailable"}
+                    </span>
+                    <h3 className="text-sm font-semibold mt-2">
+                      {doctor.firstName} {doctor.lastName}
+                    </h3>
+                    <p className="text-gray-600 text-sm">
+                      {doctor.specialization}
+                    </p>
+                    <p className="text-gray-800 font-medium mt-2">
+                      Fee: ₹{doctor.fees}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <div className="text-center text-blue-900 mt-6">No available time slots for this date.</div>
-            )
-          ) : (
-            <div className="text-center text-blue-900 mt-6">Please select a doctor and date to view time slots.</div>
-          )}
-        </div>
+              ))}
+            </div>
+          </div>
 
-        {/* Schedule Button */}
-        <button
-          onClick={handleSchedule}
-          className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          Schedule Appointment
-        </button>
-      </div>
+          {/* Appointment Details */}
+          <div className="border border-gray-300 rounded-lg p-6 h-fit">
+            <h3 className="text-2xl font-bold mb-4">
+              Appointment with Dr. {selectedDoctor?.firstName}{" "}
+              {selectedDoctor?.lastName}
+            </h3>
+            <img
+              src={selectedDoctor?.image || doctorImage}
+              alt={`Dr. ${selectedDoctor?.firstName} ${selectedDoctor?.lastName}`}
+              className="w-32 h-32 object-cover rounded-lg"
+            />
+            <p className="text-gray-600 mt-2">
+              {selectedDoctor?.specialization || "Specialization not available"}{" "}
+              | {selectedDoctor?.experience || "Experience not available"}
+            </p>
+            <p className="text-gray-800 font-medium">
+              Fee: ₹{selectedDoctor?.fees}
+            </p>
+
+            {/* Available Slots */}
+            <div className="mt-6">
+              <h3 className="text-xl font-bold">Available Slots</h3>
+              <div className="flex gap-4 mt-4">
+                {docSlots.map((item, index) => (
+                  <div
+                    key={index}
+                    onClick={() => setSlotIndex(index)}
+                    className={`text-center py-3 px-4 rounded-lg cursor-pointer ${
+                      slotIndex === index
+                        ? "bg-blue-500 text-white"
+                        : "border border-gray-300"
+                    }`}
+                  >
+                    <p>{daysOfWeek[item[0].datetime.getDay()]}</p>
+                    <p>{item[0].datetime.getDate()}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Slot Times */}
+              <div className="flex gap-4 mt-6 flex-wrap">
+                {docSlots[slotIndex]?.map((item, index) => (
+                  <p
+                    key={index}
+                    onClick={() => setSlotTime(item.time)}
+                    className={`py-2 px-3 rounded-lg cursor-pointer ${
+                      item.time === slotTime
+                        ? "bg-blue-500 text-white"
+                        : "border border-gray-300"
+                    }`}
+                  >
+                    {item.time}
+                  </p>
+                ))}
+              </div>
+            </div>
+
+            {/* Book Appointment Button */}
+            <button
+              onClick={bookAppointment}
+              className="bg-blue-500 text-white px-6 py-3 rounded-full mt-8 transform transition-all duration-300 ease-in-out hover:bg-blue-600 hover:scale-105 hover:shadow-lg"
+            >
+              Book Appointment
+            </button>
+          </div>
+        </>
+      ) : (
+        <div className="text-center text-2xl font-bold text-red-500">
+          No doctors available. Please try again later.
+        </div>
+      )}
     </div>
   );
 };

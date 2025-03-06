@@ -1,209 +1,185 @@
-const Appointment = require('../models/Appointment');
 const mongoose = require('mongoose');
+const appointmentModel = require('../models/Appointment');
+const doctorModel = require('../models/Doctor');
+const userModel = require('../models/Patient'); // Assuming you have a User model
 
-// Schedule Appointment
-const parseTimeToDate = (date, time) => {
-  const [timePart, period] = time.split(' '); 
-  const [hours, minutes] = timePart.split(':'); 
-
-  const parsedDate = new Date(date); // Base date
-  let hour = parseInt(hours);
-
-  // Convert to 24-hour format
-  if (period === 'PM' && hour !== 12) {
-    hour += 12;
-  } else if (period === 'AM' && hour === 12) {
-    hour = 0;
-  }
-
-  parsedDate.setHours(hour);
-  parsedDate.setMinutes(parseInt(minutes));
-  parsedDate.setSeconds(0);
-
-  return parsedDate;
-};
-
-exports.scheduleAppointment = async (req, res) => {
+// Book Appointment API
+const bookAppointment = async (req, res) => {
   try {
-    const { date, appointmentType, doctor, patient, status } = req.body;
+    // Destructuring data from the request body
+    const { userId, docId, slotDate, slotTime } = req.body;
 
-    // Validate required fields
-    if (!date || !appointmentType || !doctor || !patient) {
-      return res.status(400).json({
-        success: false,
-        message: 'All fields (date, appointmentType, doctor, patient) are required.',
-      });
+    // Validate that all required fields are present
+    if (!userId) {
+      return res.status(400).json({ success: false, message: 'User ID is required' });
+    }
+    if (!docId) {
+      return res.status(400).json({ success: false, message: 'Doctor ID is required' });
+    }
+    if (!slotDate) {
+      return res.status(400).json({ success: false, message: 'Slot date is required' });
+    }
+    if (!slotTime) {
+      return res.status(400).json({ success: false, message: 'Slot time is required' });
     }
 
-    // Convert date string to Date object
-    const appointmentDate = new Date(date);
-    if (isNaN(appointmentDate)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid date format. Please provide a valid date.',
-      });
+    // Check if the doctor ID is valid
+    if (!mongoose.Types.ObjectId.isValid(docId)) {
+      return res.status(400).json({ success: false, message: 'Invalid doctor ID' });
+    }
+    
+    // Find doctor by ID
+    const docData = await doctorModel.findById(docId).select('-password');
+    
+    // If doctor not found, return 404 response
+    if (!docData) {
+      console.log(`Doctor not found for id: ${docId}`);
+      return res.status(404).json({ success: false, message: 'Doctor not found' });
     }
 
-    // Fetch available time slots based on the selected date and doctor
-    const timeSlots = await TimeSlot.find({
-      doctor,
-      date: appointmentDate.toISOString().split('T')[0], // Compare only the date part
-      isBooked: false,  // Only fetch unbooked slots
-    });
-
-    if (timeSlots.length === 0) {
-      return res.status(404).json({ success: false, message: 'No available time slots for the selected date.' });
+    // Check if the doctor is available
+    if (!docData.available) {
+      return res.status(400).json({ success: false, message: 'Doctor not available' });
     }
 
-    // Allow the patient to select one of the available time slots (assuming the front-end will pass this time)
-    const selectedTimeSlot = req.body.selectedTimeSlot;  // You need to get this from the patient interface
-
-    if (!selectedTimeSlot) {
-      return res.status(400).json({
-        success: false,
-        message: 'Please select a time slot for your appointment.',
-      });
+    // Checking if the slot is already booked
+    let slots_booked = docData.slots_booked || {};
+    if (slots_booked[slotDate]) {
+      if (slots_booked[slotDate].includes(slotTime)) {
+        return res.status(400).json({ success: false, message: 'Slot Not Available' });
+      } else {
+        // If slot is available, add the new slot
+        slots_booked[slotDate].push(slotTime);
+      }
+    } else {
+      // If no slots for the given date, create a new entry for the date
+      slots_booked[slotDate] = [slotTime];
     }
 
-    // Find the selected time slot
-    const timeSlotObj = timeSlots.find(slot => slot.startTime === selectedTimeSlot);
-
-    if (!timeSlotObj) {
-      return res.status(404).json({ success: false, message: 'Time slot not found for the selected time.' });
+    // Find the user by ID and exclude password field
+    const userData = await userModel.findById(userId).select('-password');
+    
+    // If user not found, return 404 response
+    if (!userData) {
+      return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    // Convert time string to Date object
-    const startDateTime = parseTimeToDate(appointmentDate, timeSlotObj.startTime);
-    const endDateTime = parseTimeToDate(appointmentDate, timeSlotObj.endTime);
+    // Remove the 'slots_booked' field from docData before sending it to the frontend
+    delete docData.slots_booked;
 
-    // Create the new appointment
-    const newAppointment = new Appointment({
-      date: appointmentDate,
-      timeSlot: timeSlotObj._id,  // Save the TimeSlot reference (ObjectId)
-      appointmentType,
-      doctor,
-      patient,
-      startTime: startDateTime,
-      endTime: endDateTime,
-      status: status || 'Scheduled',  
-    });
+    const appointmentData = {
+      userId,
+      docId,
+      patient: userData, 
+      doctor: docData,  
+      amount: docData.fees,
+      slotTime,
+      slotDate,
+      date: Date.now()
+    };
 
-    // Save the new appointment
+    // Create a new appointment instance and save it to the database
+    const newAppointment = new appointmentModel(appointmentData);
     await newAppointment.save();
 
-    // Mark the time slot as booked
-    timeSlotObj.isBooked = true;
-    timeSlotObj.patient = patient;
-    await timeSlotObj.save();
+    // Update the doctor's available slots
+    await doctorModel.findByIdAndUpdate(docId, { slots_booked });
 
-    res.status(201).json({
-      success: true,
-      message: 'Appointment scheduled successfully.',
-      appointment: newAppointment,
-    });
+    // Return success response
+    res.json({ success: true, message: 'Appointment booked successfully' });
+
   } catch (error) {
-    console.error('Error scheduling appointment:', error);
-    res.status(500).json({
-      success: false,
-      message: 'An error occurred while scheduling the appointment.',
-      error: error.message,
-    });
+    console.error('Error booking appointment:', error);
+    
+    // Check if the error is due to missing doctor or user
+    if (error.name === 'CastError') {
+      return res.status(400).json({ success: false, message: 'Invalid data format' });
+    }
+    
+    // General server error response
+    res.status(500).json({ success: false, message: 'Internal Server Error', error: error.message });
   }
 };
 
-
-// Get Available Time Slots
-exports.getAvailableTimeSlots = async (req, res) => {
+// API to get doctor appointments
+const appointmentsDoctor = async (req, res) => {
   try {
-    const { doctorId, date } = req.query;
+    const { docId } = req.body;
 
-    if (!doctorId || !date) {
-      return res.status(400).json({ success: false, message: 'Doctor ID and Date are required.' });
+    // Validate doctor ID
+    if (!mongoose.Types.ObjectId.isValid(docId)) {
+      return res.status(400).json({ success: false, message: 'Invalid doctor ID' });
     }
 
-    if (!mongoose.Types.ObjectId.isValid(doctorId)) {
-      return res.status(400).json({ success: false, message: 'Invalid Doctor ID format.' });
-    }
+    const doctor = await doctorModel.findById(docId);
+    if (!doctor) return res.status(404).json({ success: false, message: 'Doctor not found' });
 
-    const doctorObjectId = new mongoose.Types.ObjectId(doctorId);
+    const appointments = await appointmentModel
+      .find({ doctor: docId, cancelled: false })
+      .populate('patient', 'firstName lastName email contactNumber')
+      .sort({ slotDate: 1, slotTime: 1 });
 
-    const appointmentDate = new Date(date);
-    const startOfDay = new Date(appointmentDate.setHours(0, 0, 0, 0));
-    const endOfDay = new Date(appointmentDate.setHours(23, 59, 59, 999));
+    res.status(200).json({ success: true, appointments });
 
-    const availableTimeSlots = await TimeSlot.find({
-      doctor: doctorObjectId,
-      date: { $gte: startOfDay, $lte: endOfDay },
-      isBooked: false,
-    }).populate('doctor', 'firstName lastName specialization');
-
-    if (availableTimeSlots.length === 0) {
-      return res.status(404).json({ success: false, message: 'No available time slots found.' });
-    }
-
-    res.status(200).json({ success: true, availableTimeSlots });
   } catch (error) {
-    console.error('Error fetching available time slots:', error);
-    res.status(500).json({ success: false, message: 'Failed to fetch available time slots.', error: error.message });
+    console.error('Error fetching appointments:', error);
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
-
-// Get all appointments for a patient
-exports.getPatientAppointments = async (req, res) => {
+// API to cancel an appointment
+const appointmentCancel = async (req, res) => {
   try {
-    const { patientId } = req.query;
+    const { docId, appointmentId } = req.body;
 
-    if (!patientId) {
-      return res.status(400).json({ success: false, message: 'Patient ID is required.' });
+    // Validate IDs
+    if (!mongoose.Types.ObjectId.isValid(docId) || !mongoose.Types.ObjectId.isValid(appointmentId)) {
+      return res.status(400).json({ success: false, message: 'Invalid doctor or appointment ID' });
     }
 
-    if (!mongoose.Types.ObjectId.isValid(patientId)) {
-      return res.status(400).json({ success: false, message: 'Invalid Patient ID format.' });
+    const appointmentData = await appointmentModel.findById(appointmentId);
+
+    if (appointmentData && appointmentData.doctor.toString() === docId && !appointmentData.cancelled) {
+      await appointmentModel.findByIdAndUpdate(appointmentId, { cancelled: true });
+      return res.status(200).json({ success: true, message: 'Appointment Cancelled' });
     }
 
-    const patientAppointments = await Appointment.find({ patient: patientId })
-      .populate('doctor', 'name specialty')  // Optionally populate doctor details
-      .populate('timeSlot', 'startTime endTime')  // Optionally populate time slot details
-      .sort({ date: -1 }); // Sort by date, descending
+    res.status(400).json({ success: false, message: 'Appointment not found or already cancelled' });
 
-    if (patientAppointments.length === 0) {
-      return res.status(404).json({ success: false, message: 'No appointments found for this patient.' });
-    }
-
-    res.status(200).json({ success: true, patientAppointments });
   } catch (error) {
-    console.error('Error fetching patient appointments:', error);
-    res.status(500).json({ success: false, message: 'Failed to fetch patient appointments.', error: error.message });
+    console.error('Error canceling appointment:', error);
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
-exports.getDoctorAppointments = async (req, res) => {
+// API to mark appointment as completed
+const appointmentComplete = async (req, res) => {
   try {
-    const { doctorId } = req.query;
+    const { docId, appointmentId } = req.body;
 
-    if (!doctorId) {
-      return res.status(400).json({ success: false, message: 'Doctor ID is required.' });
+    // Validate IDs
+    if (!mongoose.Types.ObjectId.isValid(docId) || !mongoose.Types.ObjectId.isValid(appointmentId)) {
+      return res.status(400).json({ success: false, message: 'Invalid doctor or appointment ID' });
     }
 
-    if (!mongoose.Types.ObjectId.isValid(doctorId)) {
-      return res.status(400).json({ success: false, message: 'Invalid Doctor ID format.' });
+    const appointmentData = await appointmentModel.findById(appointmentId);
+
+    if (appointmentData && appointmentData.doctor.toString() === docId && !appointmentData.isCompleted) {
+      await appointmentModel.findByIdAndUpdate(appointmentId, { isCompleted: true });
+      return res.status(200).json({ success: true, message: 'Appointment Completed' });
     }
 
-    const doctorAppointments = await Appointment.find({ doctor: doctorId })
-      .populate('patient', 'name email') // Optionally populate patient details
-      .populate('timeSlot', 'startTime endTime')  // Optionally populate time slot details
-      .sort({ date: -1 }); // Sort by date, descending
+    res.status(400).json({ success: false, message: 'Appointment not found or already completed' });
 
-    if (doctorAppointments.length === 0) {
-      return res.status(404).json({ success: false, message: 'No appointments found for this doctor.' });
-    }
-
-    res.status(200).json({ success: true, doctorAppointments });
   } catch (error) {
-    console.error('Error fetching doctor appointments:', error);
-    res.status(500).json({ success: false, message: 'Failed to fetch doctor appointments.', error: error.message });
+    console.error('Error completing appointment:', error);
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
-
+module.exports = {
+  bookAppointment,
+  appointmentCancel,
+  appointmentComplete,
+  appointmentsDoctor,
+};

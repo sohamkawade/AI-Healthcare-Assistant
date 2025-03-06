@@ -2,46 +2,53 @@ const express = require('express');
 const multer = require("multer");
 const app = express();
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
+const bodyParser = require("body-parser");
+const path = require('path');
+const expressSession = require('express-session');
+const flash = require("connect-flash");
+const killPort = require('kill-port');
+require("dotenv").config();
+const db = require('./config/db');
+
+// Importing Routes
 const authRoutes = require('./routes/auth');
 const appointmentRoutes = require('./routes/appointment');
 const contactRoutes = require('./routes/contactRoutes');
 const reminderRoutes = require('./routes/reminderRoutes');
-// const recordRoutes = require("./routes/records");
-const cookieParser = require('cookie-parser');
-const bodyParser = require("body-parser");
-const path = require('path');
-const expressSession = require('express-session')
-const flash = require("connect-flash")
-const killPort = require('kill-port');
 
-
-require("dotenv").config()
-const db = require('./config/db');
-
+// Middleware Setup
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(cors());
 app.use(
   expressSession({
     resave: false,
     saveUninitialized: false,
     secret: process.env.EXPRESS_SESSION_SECRET,
   })
-)
+);
 app.use(flash());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use("/uploads", express.static("uploads"));
 
-app.use(cors());
-app.use("/uploads", express.static("uploads")); 
+// Logging Middleware
+app.use((req, res, next) => {
+  console.log(`Request received: ${req.method} ${req.url}`);
+  next();
+});
 
-app.use('/api/auth', authRoutes);
+// Route Handlers for API
 app.use('/api', appointmentRoutes);
-app.use('/api', contactRoutes);
-app.use("/api", reminderRoutes)
-// app.use("/api", recordRoutes); 
+app.use('/api/auth', authRoutes); 
+app.use('/api/appointments', appointmentRoutes); // Handles appointment-related routes
+app.use('/api/contacts', contactRoutes); // Handles contact-related routes
+app.use('/api/reminders', reminderRoutes); // Handles reminder-related routes
 
+// Error Handling Middleware
 app.use((err, req, res, next) => {
   const statusCode = err.statusCode || 500;
   res.status(statusCode).json({
@@ -50,18 +57,13 @@ app.use((err, req, res, next) => {
   });
 });
 
-app.use((req, res, next) => {
-  console.log(`Request received: ${req.method} ${req.url}`);
-  next();
-});
-
-
+// 404 Handler
 app.use((req, res) => {
   res.status(404).json({ success: false, message: 'Route not found' });
 });
 
-const port = process.env.PORT
-
+// Server Setup
+const port = process.env.PORT || 5000;
 killPort(port)
   .then(() => {
     app.listen(port, () => {

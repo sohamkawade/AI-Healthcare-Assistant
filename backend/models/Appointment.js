@@ -2,44 +2,26 @@ const mongoose = require('mongoose');
 
 const appointmentSchema = new mongoose.Schema(
   {
-    date: {
-      type: Date,
-      required: [true, 'Appointment date is required'],
-      validate: {
-        validator: function (v) {
-          return v > Date.now(); // Ensure future date
-        },
-        message: 'Appointment date must be in the future.',
-      },
-    },
-    timeSlot: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'TimeSlot',
-      required: [true, 'Time slot is required'],
-    },
-    appointmentType: {
-      type: String,
-      required: [true, 'Appointment type is required'],
-      enum: ['Consultation', 'Follow-up', 'Routine Checkup', 'Dental Appointment', 'Mental Health Session'],
-    },
     doctor: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Doctor',
-      required: [true, 'Doctor is required'],
+      required: true
     },
     patient: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Patient',
-      required: [true, 'Patient is required'],
+      required: true
     },
-    status: {
-      type: String,
-      default: 'Scheduled',
-      enum: ['Scheduled', 'Completed', 'Canceled'],
-    },
+    slotDate: { type: String, required: true },
+    slotTime: { type: String, required: true },
+    amount: { type: Number, required: true },
+    date: { type: Date, default: Date.now },
+    cancelled: { type: Boolean, default: false },
+    payment: { type: Boolean, default: false },
+    isCompleted: { type: Boolean, default: false }
   },
   { timestamps: true }
 );
 
-
+// Create the Appointment model
 module.exports = mongoose.model('Appointment', appointmentSchema, 'Appointments');

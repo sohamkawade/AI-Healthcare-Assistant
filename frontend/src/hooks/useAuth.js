@@ -8,7 +8,7 @@ export const useAuth = () => {
     throw new Error('useAuth must be used within an AuthProvider');
   }
 
-  // Use optional chaining and default values to avoid undefined issues
+  // Destructure values with default values to avoid undefined errors
   const { 
     user = null, 
     token = null, 
@@ -17,12 +17,13 @@ export const useAuth = () => {
     logout = () => {}, 
     role = null, 
     loading = false,
-    toggle = false,              // Add toggle state 
-    setToggle = () => {}        // Add setToggle function 
+    toggle = false,  // Toggle state
+    setToggle = () => {}  // Set Toggle function
   } = context;
 
   const [userType, setUserType] = useState(null);
 
+  // Effect to determine userType (doctor or patient) based on user object
   useEffect(() => {
     if (user) {
       const type = user.specialization ? 'doctor' : 'patient';
@@ -30,16 +31,28 @@ export const useAuth = () => {
     }
   }, [user]);
 
+  // Logout function to clear user data and localStorage
   const handleLogout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('userId'); // Remove userId from localStorage
     setUser(null);
     setToken(null);
     logout();
   };
 
+  // Ensure userId is fetched from context or localStorage
+  const userId = user?.id || localStorage.getItem('userId'); // Fallback to localStorage if user is not available
+
+  useEffect(() => {
+    // If user is available, store userId in localStorage
+    if (user?.id) {
+      localStorage.setItem('userId', user.id);
+    }
+  }, [user]);
+
   return {
     user,
-    userId: user?.id,
+    userId, // Ensure userId is properly set
     token,
     setUser,
     setToken,
