@@ -5,15 +5,17 @@ const {
     appointmentCancel,
     appointmentComplete,
     bookAppointment,
+    getAppointments
 } = require('../controllers/appointmentController');
 const { getPatientById } = require('../controllers/patientController');
 const { getDoctors } = require('../controllers/doctorController');
 const { authenticate } = require('../middlewares/authMiddleware'); // Make sure you have authentication middleware
 
 // Route to book a new appointment
-router.post('/book', authenticate, bookAppointment); // Added authenticate middleware if booking appointment requires authentication
+router.post('/book', authenticate, bookAppointment); 
 
-// Route to get doctor appointments
+router.get("/appointments/patient/:patientId", getAppointments);
+
 router.get('/doctor/:docId', authenticate, appointmentsDoctor); // Added authenticate middleware for security
 
 // Route to cancel an appointment

@@ -35,18 +35,12 @@ app.use(flash());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use("/uploads", express.static("uploads"));
 
-// Logging Middleware
-app.use((req, res, next) => {
-  console.log(`Request received: ${req.method} ${req.url}`);
-  next();
-});
-
 // Route Handlers for API
 app.use('/api', appointmentRoutes);
 app.use('/api/auth', authRoutes); 
-app.use('/api/appointments', appointmentRoutes); // Handles appointment-related routes
-app.use('/api/contacts', contactRoutes); // Handles contact-related routes
-app.use('/api/reminders', reminderRoutes); // Handles reminder-related routes
+app.use('/api/appointments', appointmentRoutes); 
+app.use('/api/contacts', contactRoutes);
+app.use('/api/reminders', reminderRoutes); 
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {

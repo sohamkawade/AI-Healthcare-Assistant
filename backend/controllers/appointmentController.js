@@ -101,6 +101,29 @@ const bookAppointment = async (req, res) => {
   }
 };
 
+const getAppointments = async (req, res) => {
+  const { patientId } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(patientId)) {
+    return res.status(400).json({ success: false, message: "Invalid Patient ID" });
+  }
+
+  try {
+    const appointments = await appointmentModel.find({ patient: new mongoose.Types.ObjectId(patientId) })
+      .populate('patient', 'firstName lastName email contactNumber')
+      .populate('doctor', 'name specialization fees');
+
+    if (!appointments || appointments.length === 0) {
+      return res.status(404).json({ success: false, message: "No appointments found for this patient" });
+    }
+
+    res.status(200).json({ success: true, appointments });
+  } catch (error) {
+    console.error("Error fetching appointments:", error);
+    res.status(500).json({ success: false, message: "Internal server error", error: error.message });
+  }
+};
+
 // API to get doctor appointments
 const appointmentsDoctor = async (req, res) => {
   try {
@@ -182,4 +205,5 @@ module.exports = {
   appointmentCancel,
   appointmentComplete,
   appointmentsDoctor,
+  getAppointments
 };
