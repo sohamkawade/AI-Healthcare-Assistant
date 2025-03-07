@@ -30,9 +30,20 @@ const Signup = () => {
 
   const validateForm = () => {
     const { firstName, lastName, email, password, birthdate, contactNumber, address } = formData;
+    const nameRegex = /^[A-Za-z]+$/;
 
     if (!firstName || !lastName || !email || !password || !address || !birthdate || !contactNumber) {
       toast.error('All fields are required', {theme:"colored"});
+      return false;
+    }
+
+    if (!nameRegex.test(firstName)) {
+      toast.error('First name should not contain numbers or special characters', { theme: 'colored' });
+      return false;
+    }
+  
+    if (!nameRegex.test(lastName)) {
+      toast.error('Last name should not contain numbers or special characters', { theme: 'colored' });
       return false;
     }
 

@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import apiService from "../services/apiService";
 import { AuthContext } from "../context/AuthContext";
 import { motion } from "framer-motion";
+import { User } from "lucide-react";
 import "react-toastify/dist/ReactToastify.css";
 
 const DoctorSignup = () => {
@@ -29,16 +30,59 @@ const DoctorSignup = () => {
     });
   };
 
-  const validateForm = () => {
-    const { firstName, lastName, email, password, specialization, contactNumber, fees, degree } = formData;
 
-    if (!firstName || !lastName || !email || !password || !specialization || !contactNumber || !fees || !degree) {
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    setFormData({ ...formData, profileImage: file });
+  };
+
+  const validateForm = () => {
+    const {
+      firstName,
+      lastName,
+      email,
+      password,
+      specialization,
+      contactNumber,
+      fees,
+      degree,
+    } = formData;
+
+    if (
+      !firstName ||
+      !lastName ||
+      !email ||
+      !password ||
+      !specialization ||
+      !contactNumber ||
+      !fees ||
+      !degree
+    ) {
       toast.error("All fields are required", { theme: "colored" });
+      return false;
+    }
+    const nameRegex = /^[A-Za-z]+$/;
+
+    if (!nameRegex.test(firstName)) {
+      toast.error(
+        "First name should not contain numbers or special characters",
+        { theme: "colored" }
+      );
+      return false;
+    }
+
+    if (!nameRegex.test(lastName)) {
+      toast.error(
+        "Last name should not contain numbers or special characters",
+        { theme: "colored" }
+      );
       return false;
     }
 
     if (password.length < 6) {
-      toast.error("Password must be at least 6 characters", { theme: "colored" });
+      toast.error("Password must be at least 6 characters", {
+        theme: "colored",
+      });
       return false;
     }
 
@@ -50,7 +94,9 @@ const DoctorSignup = () => {
 
     const contactRegex = /^[0-9]{10}$/;
     if (!contactRegex.test(contactNumber)) {
-      toast.error("Please enter a valid 10-digit contact number", { theme: "colored" });
+      toast.error("Please enter a valid 10-digit contact number", {
+        theme: "colored",
+      });
       return false;
     }
 
@@ -71,14 +117,21 @@ const DoctorSignup = () => {
     try {
       const response = await apiService.registerDoctor(formData);
       if (response.success) {
-        toast.success("Registration successful! You can now log in.", { theme: "colored" });
+        toast.success("Registration successful! You can now log in.", {
+          theme: "colored",
+        });
         setDoctorData(response.data);
         navigate("/login");
       } else {
-        toast.error(response.message || "Registration failed. Please try again.", { theme: "colored" });
+        toast.error(
+          response.message || "Registration failed. Please try again.",
+          { theme: "colored" }
+        );
       }
     } catch (error) {
-      toast.error("An error occurred during registration. Please try again.", { theme: "colored" });
+      toast.error("An error occurred during registration. Please try again.", {
+        theme: "colored",
+      });
     } finally {
       setLoading(false);
     }
@@ -92,7 +145,9 @@ const DoctorSignup = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, type: "spring", stiffness: 100 }}
       >
-        <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">Doctor Registration</h2>
+        <h2 className="text-3xl font-bold text-center text-gray-800 mb-3">
+          Doctor Registration
+        </h2>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-2 gap-6">
             {[
@@ -126,7 +181,9 @@ const DoctorSignup = () => {
                 value={formData.specialization}
                 onChange={handleChange}
               >
-                <option value="" disabled>Select Specialization</option>
+                <option value="" disabled>
+                  Select Specialization
+                </option>
                 <option value="Cardiologist">Cardiologist</option>
                 <option value="Dermatologist">Dermatologist</option>
                 <option value="Neurologist">Neurologist</option>

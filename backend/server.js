@@ -33,9 +33,8 @@ app.use(
 );
 app.use(flash());
 app.use(express.static(path.join(__dirname, 'public')));
-app.use("/uploads", express.static("uploads"));
+app.use('/uploads', express.static('frontend/public/uploads'));
 
-// Route Handlers for API
 app.use('/api', appointmentRoutes);
 app.use('/api/auth', authRoutes); 
 app.use('/api/appointments', appointmentRoutes); 

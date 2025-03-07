@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import doctorImage from "../assets/omkar.jpg";
+import doctorImage from "../assets/doctor.jpg";
 
 const daysOfWeek = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 
@@ -122,6 +122,7 @@ const Appointment = () => {
     
         if (response.status === 200 && response.data.success) {
           toast.success(response.data.message || "Appointment booked successfully.", {theme:"colored"});
+          navigate('/dashboard');
         } else {
           toast.error(
             `Failed to book appointment: ${response.data.message || "Unknown error", {theme:"colored"}}`

@@ -1,12 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const { registerPatient } = require('../controllers/patientController');
-const { registerDoctor } = require('../controllers/doctorController');
+const doctorController = require('../controllers/doctorController');
 const { login, logout } = require('../controllers/loginController');
-const {getProfile} = require('../controllers/profileController');
+const { getProfile } = require('../controllers/profileController');
 const validateBody = require('../middlewares/validateBody');
 const { authenticate } = require('../middlewares/authMiddleware');
-const {forgotPassword, resetPassword} = require('../controllers/authController');
+const { forgotPassword, resetPassword } = require('../controllers/authController');
 
 const errorHandler = (err, req, res, next) => {
   console.error(err);
@@ -31,11 +31,11 @@ router.post(
   registerPatient
 );
 
-router.post(
-  '/register-doctor',
-  validateBody(['email', 'password', 'firstName', 'lastName', 'contactNumber', 'specialization', 'fees', 'degree']),
-  registerDoctor
+router.post('/register-doctor',
+  validateBody(['firstName', 'lastName', 'email', 'password', 'contactNumber', 'specialization', 'fees', 'degree']),
+  doctorController.registerDoctor
 );
+
 
 router.post('/login',
   validateBody(['email', 'password']),
@@ -44,7 +44,7 @@ router.post('/login',
 
 router.get('/profile', authenticate, getProfile);
 
-router.get("/logout", logout)
+router.get('/logout', logout);
 
 router.post('/forgot-password', forgotPassword);
 router.post('/reset-password', resetPassword);
@@ -52,3 +52,4 @@ router.post('/reset-password', resetPassword);
 router.use(errorHandler);
 
 module.exports = router;
+

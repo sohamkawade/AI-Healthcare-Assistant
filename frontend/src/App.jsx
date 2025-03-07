@@ -9,6 +9,7 @@ import Dashboard from './pages/Dashboard';
 import Appointment from './pages/Appointment';
 import Login from './pages/Login';
 import SignUp from './pages/SignUp';
+import Aichat from './pages/Aichat';
 import DoctorSignup from './pages/DoctorSignup';
 import Profile from './pages/Profile';
 import VideoConsultation from './pages/VideoConsultation';
@@ -68,6 +69,7 @@ const MainContent = () => {
       <Route path="/medication-reminder" element={<MedicationReminder />} />
       <Route path="/personal-health-record" element={<PersonalHealthRecord />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/aichat" element={<Aichat />} />
     </Routes>
   );
 };
