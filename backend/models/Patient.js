@@ -37,6 +37,10 @@ const patientSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    profilePicture: {
+      type: String,
+      required: true,
+  },
     resetToken: {
       type: String,
       default: null,

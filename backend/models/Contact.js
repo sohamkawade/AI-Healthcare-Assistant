@@ -14,7 +14,6 @@ const contactSchema = new mongoose.Schema(
     },
     phone: {
       type: String,
-      required: true,
       trim: true,
     },
     message: {
@@ -22,13 +21,12 @@ const contactSchema = new mongoose.Schema(
       required: true,
     },
     userId: { 
-        type: mongoose.Schema.Types.ObjectId, 
-        ref: 'User', 
-        required: true 
+      type: mongoose.Schema.Types.ObjectId, 
+      ref: 'User',
     }, 
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model('Contact', contactSchema, "Contacts");
+module.exports = mongoose.model('Contact', contactSchema, 'Contacts'); 
 

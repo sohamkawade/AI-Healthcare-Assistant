@@ -16,18 +16,20 @@ import VideoConsultation from './pages/VideoConsultation';
 import MedicationReminder from './pages/MedicationReminder';
 import ForgotPassword from './components/ForgotPassword';
 import PersonalHealthRecord from './pages/PersonalHealthRecord';
+import NewPrescription from './pages/NewPrescription';
+import Prescriptions from './pages/Prescriptions';
+import DoctorPrescriptions from './pages/DoctorPrescriptions';
+import Patients from './pages/Patients';
 import NotificationProvider from './context/NotificationContext';
 import { ChatProvider } from './context/ChatContext';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import { SnackbarProvider } from 'notistack';
+import { AuthProvider } from './context/AuthContext';
 import './index.css';
 
 const App = () => {
   return (
-    <NotificationProvider>
-      <ChatProvider>
-        <SnackbarProvider maxSnack={3}>
+    <AuthProvider>
+      <NotificationProvider>
+        <ChatProvider>
           <Router>
             <div className="flex flex-col min-h-screen">
               <Navbar />
@@ -37,19 +39,9 @@ const App = () => {
               <Footer />
             </div>
           </Router>
-          <ToastContainer
-            position="top-right"
-            autoClose={3000}
-            newestOnTop
-            closeOnClick
-            rtl={false}
-            pauseOnFocusLoss
-            draggable
-            pauseOnHover
-          />
-        </SnackbarProvider>
-      </ChatProvider>
-    </NotificationProvider>
+        </ChatProvider>
+      </NotificationProvider>
+    </AuthProvider>
   );
 };
 
@@ -70,6 +62,10 @@ const MainContent = () => {
       <Route path="/personal-health-record" element={<PersonalHealthRecord />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/aichat" element={<Aichat />} />
+      <Route path="/new-prescription" element={<NewPrescription />} />
+      <Route path="/prescriptions" element={<Prescriptions />} />
+      <Route path="/doctor-prescriptions" element={<DoctorPrescriptions />} />
+      <Route path="/patients" element={<Patients />} />
     </Routes>
   );
 };

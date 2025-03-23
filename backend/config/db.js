@@ -1,8 +1,8 @@
 const mongoose = require('mongoose')
-const config = require('config')
+require('dotenv').config()
 const debgr = require('debug')("development:mongoose")
 
-mongoose.connect(`${config.get("MONGODB_URI")}/healthcare_db`)
+mongoose.connect(process.env.MONGODB_URI)
     .then(() => {
         debgr("Connected to MongoDB");
     })

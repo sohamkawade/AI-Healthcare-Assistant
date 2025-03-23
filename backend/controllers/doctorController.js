@@ -1,19 +1,31 @@
 // controllers/doctorController.js
 const Doctor = require('../models/Doctor');
 const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const { generateToken } = require('../utils/generateToken');
+const path = require('path');
+const { generateToken } = require("../utils/generateToken");
 
-// Doctor registration controller
-module.exports.registerDoctor = async (req, res) => {
+
+const registerDoctor = async (req, res) => {
   try {
 
     const { email, password, firstName, lastName, contactNumber, specialization, fees, degree } = req.body;
 
-    if (![email, password, firstName, lastName, contactNumber, specialization, fees, degree].every(Boolean)) {
-      return res.status(400).json({ success: false, message: 'All fields are required.' });
+    // Check if file was uploaded
+    if (!req.file) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Profile picture is required' 
+      });
     }
 
+    // Validate required fields
+    if (![email, password, firstName, lastName, contactNumber, specialization, fees, degree].every(Boolean)) {
+
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Please fill in all required fields: First Name, Last Name, Email, Password, Contact Number, Specialization, Fees, and Degree.' 
+      });
+    }
 
     const existingDoctor = await Doctor.findOne({ email });
     if (existingDoctor) {
@@ -22,42 +34,68 @@ module.exports.registerDoctor = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const newDoctor = new Doctor({
-      email,
-      password: hashedPassword,
+    // Store the file path relative to the uploads directory
+    const profilePicturePath = `/uploads/${req.file.filename}`;
+
+    const doctor = await Doctor.create({
       firstName,
       lastName,
+      email,
+      password: hashedPassword,
       contactNumber,
-      specialization,
       fees,
       degree,
+      specialization,
+      profilePicture: profilePicturePath,
+      isActive: true,
+      available: true
     });
 
-    await newDoctor.save();
-    res.status(201).json({ 
-      success: true, 
-      doctor: { 
-        firstName, 
-        lastName, 
-        email, 
-      },
+
+    // Generate token
+    const token = generateToken(doctor);
+    res.cookie("token", token, { httpOnly: true });
+
+    res.status(201).json({
+      success: true,
+      message: 'Doctor registered successfully',
+      data: {
+        id: doctor._id,
+        firstName: doctor.firstName,
+        lastName: doctor.lastName,
+        email: doctor.email,
+        contactNumber: doctor.contactNumber,
+        fees: doctor.fees,
+        degree: doctor.degree,
+        specialization: doctor.specialization,
+        profilePicture: doctor.profilePicture,
+        token
+      }
     });
   } catch (error) {
-    console.error('Error in doctor registration:', error);
-    res.status(500).json({ success: false, message: 'Internal server error during registration.' });
+    console.error('Error in registerDoctor:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: error.message || 'Internal server error during registration.' 
+    });
   }
 };
 
-// Get doctors with pagination and filtering
-module.exports.getDoctors = async (req, res) => {
+const getDoctors = async (req, res) => {
   try {
     const { page = 1, limit = 10, specialization } = req.query;
     const skip = (page - 1) * limit;
 
     const query = specialization ? { specialization: { $regex: specialization, $options: 'i' } } : {};
+
+    // Log the total count before applying pagination
+    const totalCount = await Doctor.countDocuments(query);
+
     const doctors = await Doctor.find(query).skip(skip).limit(parseInt(limit)).select('-password');
 
+
     const totalDoctors = await Doctor.countDocuments(query);
+
     res.status(200).json({
       success: true,
       message: 'Doctors fetched successfully.',
@@ -70,6 +108,54 @@ module.exports.getDoctors = async (req, res) => {
   }
 };
 
-module.exports.generateToken = (doctor) => {
-  return jwt.sign({ id: doctor._id, email: doctor.email }, process.env.JWT_SECRET, { expiresIn: '1d' });
+const updateDoctorAvailability = async (req, res) => {
+    try {
+        const { docId, slotDate, slotTime, isAvailable } = req.body;
+        
+        // Update the doctor's availability for the specific time slot
+        const doctor = await Doctor.findById(docId);
+        if (!doctor) {
+            return res.status(404).json({
+                success: false,
+                message: 'Doctor not found'
+            });
+        }
+
+        // If the doctor doesn't have a bookedSlots array, create it
+        if (!doctor.bookedSlots) {
+            doctor.bookedSlots = [];
+        }
+
+        if (!isAvailable) {
+            // Add the slot to bookedSlots
+            doctor.bookedSlots.push({
+                date: slotDate,
+                time: slotTime
+            });
+        } else {
+            // Remove the slot from bookedSlots
+            doctor.bookedSlots = doctor.bookedSlots.filter(
+                slot => !(slot.date === slotDate && slot.time === slotTime)
+            );
+        }
+
+        // Save the updated doctor
+        await doctor.save();
+
+        res.status(200).json({
+            success: true,
+            message: 'Doctor availability updated successfully'
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Error updating doctor availability'
+        });
+    }
+};
+
+module.exports = {
+    registerDoctor,
+    getDoctors,
+    updateDoctorAvailability
 };

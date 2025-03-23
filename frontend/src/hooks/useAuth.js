@@ -15,7 +15,8 @@ export const useAuth = () => {
     setUser = () => {}, 
     setToken = () => {}, 
     logout = () => {}, 
-    role = null, 
+    role = null,
+    setRole = () => {}, // Add setRole with default empty function
     loading = false,
     toggle = false,  // Toggle state
     setToggle = () => {}  // Set Toggle function
@@ -28,15 +29,18 @@ export const useAuth = () => {
     if (user) {
       const type = user.specialization ? 'doctor' : 'patient';
       setUserType(type);
+      setRole(type); // Set role based on user type
     }
-  }, [user]);
+  }, [user, setRole]);
 
   // Logout function to clear user data and localStorage
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('userId'); // Remove userId from localStorage
+    localStorage.removeItem('role'); // Also remove role from localStorage
     setUser(null);
     setToken(null);
+    setRole(null); // Reset role
     logout();
   };
 
@@ -58,6 +62,7 @@ export const useAuth = () => {
     setToken,
     logout: handleLogout,
     role,
+    setRole, // Export setRole
     loading,
     userType,
     toggle,         // Return toggle

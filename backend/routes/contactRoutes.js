@@ -1,8 +1,10 @@
 const express = require('express');
-const { createContactMessage } = require('../controllers/contactController');
+const router = express.Router();
+const { submitContact } = require('../controllers/contactController');
 const { authenticate } = require('../middlewares/authMiddleware');
-const router = express.Router(); 
 
-router.post('/contact', authenticate, createContactMessage);
+
+// Authenticated contact message route
+router.post('/contacts/submit', authenticate, submitContact);
 
 module.exports = router;

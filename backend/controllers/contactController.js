@@ -1,54 +1,52 @@
 const Contact = require('../models/Contact');
 
-const createContactMessage = async (req, res) => {
+const submitContact = async (req, res) => {
   try {
-    const { name, email, phone, message } = req.body;
+    const { name, email, message, phone } = req.body;
+    const userId = req.user?._id; // Get userId from authenticated user if available
 
-    if (!name || !email || !phone || !message) {
+    // Validate required fields
+    if (!name || !email || !message) {
       return res.status(400).json({
         success: false,
-        message: 'All fields are required.',
+        message: 'Please provide name, email, and message'
       });
     }
 
+    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const phoneRegex = /^[0-9]{10}$/;
-
     if (!emailRegex.test(email)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid email format.',
+        message: 'Please provide a valid email address'
       });
     }
 
-    if (!phoneRegex.test(phone)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Phone number must be a 10-digit number.',
-      });
-    }
-
-    const newContact = new Contact({
+    // Create new contact message
+    const contactMessage = new Contact({
       name,
       email,
-      phone,
       message,
-      userId: req.user.id, 
+      phone: phone || undefined, // Only include phone if provided
+      userId: userId || undefined // Only include userId if user is authenticated
     });
 
-    await newContact.save();
+    await contactMessage.save();
 
     res.status(201).json({
       success: true,
-      message: 'Message sent successfully.',
+      message: 'Contact message submitted successfully',
+      data: contactMessage
     });
   } catch (error) {
-    console.error(error);
+    console.error('Error submitting contact form:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error.',
+      message: 'Failed to submit contact form. Please try again later.'
     });
   }
 };
 
-module.exports = { createContactMessage };
+module.exports = {
+  submitContact
+};

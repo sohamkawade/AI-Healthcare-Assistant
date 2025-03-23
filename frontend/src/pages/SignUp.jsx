@@ -1,25 +1,29 @@
-import React, { useState, useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
-import apiService from '../services/apiService';
-import { AuthContext } from '../context/AuthContext';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import { motion } from 'framer-motion';
+import React, { useState, useContext } from "react";
+import { useNavigate } from "react-router-dom";
+import apiService from "../services/apiService";
+import { AuthContext } from "../context/AuthContext";
+import { ToastContainer, toast } from "react-toastify";
+import axios from "axios";
+import "react-toastify/dist/ReactToastify.css";
+import { motion } from "framer-motion";
 import "react-toastify/dist/ReactToastify.css";
 
 const Signup = () => {
-  const { registerUser } = useContext(AuthContext);
+   const {setUser} = useContext(AuthContext);
+   const [previewImage, setPreviewImage] = useState(null);
+   const [loading, setLoading] = useState(false);
+   const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    password: '',
-    birthdate: '',
-    contactNumber: '',
-    address: '',
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+    birthdate: "",
+    contactNumber: "",
+    address: "",
+    profilePicture: null,
   });
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({
@@ -28,39 +32,92 @@ const Signup = () => {
     });
   };
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("File size should be less than 5MB");
+        return;
+      }
+      if (!file.type.startsWith("image/")) {
+        toast.error("Please upload a valid image file");
+        return;
+      }
+      setFormData((prev) => ({
+        ...prev,
+        profilePicture: file,
+      }));
+      setPreviewImage(URL.createObjectURL(file));
+    }
+  };
+
   const validateForm = () => {
-    const { firstName, lastName, email, password, birthdate, contactNumber, address } = formData;
+    const {
+      firstName,
+      lastName,
+      email,
+      password,
+      birthdate,
+      contactNumber,
+      address,
+      profilePicture,
+    } = formData;
+    
     const nameRegex = /^[A-Za-z]+$/;
 
-    if (!firstName || !lastName || !email || !password || !address || !birthdate || !contactNumber) {
-      toast.error('All fields are required', {theme:"colored"});
+    if (
+      !firstName ||
+      !lastName ||
+      !email ||
+      !password ||
+      !address ||
+      !birthdate ||
+      !contactNumber||
+      !profilePicture
+    ) {
+      toast.error("All fields are required", { theme: "colored" });
+      return false;
+    }
+
+    if (!profilePicture.type.startsWith("image/")) {
+      toast.error("Please upload a valid image file for profile picture");
       return false;
     }
 
     if (!nameRegex.test(firstName)) {
-      toast.error('First name should not contain numbers or special characters', { theme: 'colored' });
+      toast.error(
+        "First name should not contain numbers or special characters",
+        { theme: "colored" }
+      );
       return false;
     }
-  
+
     if (!nameRegex.test(lastName)) {
-      toast.error('Last name should not contain numbers or special characters', { theme: 'colored' });
+      toast.error(
+        "Last name should not contain numbers or special characters",
+        { theme: "colored" }
+      );
       return false;
     }
 
     if (password.length < 6) {
-      toast.error('Password must be at least 6 characters', {theme:"colored"});
+      toast.error("Password must be at least 6 characters", {
+        theme: "colored",
+      });
       return false;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      toast.error('Please enter a valid email',{theme:"colored"});
+      toast.error("Please enter a valid email", { theme: "colored" });
       return false;
     }
 
     const contactRegex = /^[0-9]{10}$/;
     if (!contactRegex.test(contactNumber)) {
-      toast.error('Please enter a valid 10-digit contact number',{theme:"colored"});
+      toast.error("Please enter a valid 10-digit contact number", {
+        theme: "colored",
+      });
       return false;
     }
 
@@ -69,43 +126,59 @@ const Signup = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!validateForm()) return;
 
     setLoading(true);
 
+    const formPayload = new FormData();
+
+    // Properly append the profile picture with the original file name
+    if (formData.profilePicture) {
+      const fileExtension = formData.profilePicture.name.split(".").pop();
+      const fileName = `${formData.firstName.toLowerCase()}_${formData.lastName.toLowerCase()}_${Date.now()}.${fileExtension}`;
+      formPayload.append("profilePicture", formData.profilePicture, fileName);
+    }
+
+    // Then append other form fields
+    const fieldsToAppend = [
+      "firstName",
+      "lastName",
+      "email",
+      "password",
+      "birthdate",
+      "contactNumber",
+      "address",
+    ];
+    fieldsToAppend.forEach((field) => {
+      formPayload.append(field, formData[field]);
+    });
+
     try {
-      const response = await apiService.registerPatient(formData);
-
-      if (response?.success) {
-        const userData = response.data;
-
-        if (!userData?.token) {
-          throw new Error("Token is missing from registration response.");
+      const response = await axios.post(
+        "http://localhost:5001/api/auth/register-patient",
+        formPayload,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
         }
+      );
 
+      if (response.data.success) {
         toast.success("Registration successful! You can now log in.", {theme:"colored"});
-        localStorage.setItem("authToken", userData.token);
-        registerUser(userData);
-        navigate("/login")
-
-        const profileResponse = await apiService.getProfile(userData.token);
-        if (profileResponse?.success) {
-          registerUser(profileResponse.data);
-          navigate("/login");
-          
-        } else {
-          toast.error("Failed to retrieve your profile information.",{theme:"colored"});
-        }
-      } else {
-        toast.error("Registration failed. Please try again.",{theme:"colored"});
+        setUser(response.data);
+        navigate('/login');
       }
     } catch (error) {
-      console.error("Registration Error:", error.message);
-      toast.error(error.message || "An unexpected error occurred.",{theme:"colored"});
+      console.error("Registration error:", error);
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "An error occurred during registration";
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
-    }
+    }  
   };
 
   return (
@@ -114,10 +187,39 @@ const Signup = () => {
         className="w-2/5 max-w-2xl p-7 bg-white rounded-lg shadow-lg"
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, type: 'spring', stiffness: 100 }}
+        transition={{ duration: 0.5, type: "spring", stiffness: 100 }}
       >
-        <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">Patient Registration</h2>
+        <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">
+          Patient Registration
+        </h2>
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Profile Picture at the Top */}
+          <div className="flex flex-col items-center mb-6">
+            <label className="block text-black mb-2">Profile Picture</label>
+            <div className="relative">
+              <input
+                type="file"
+                name="profilePicture"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="hidden"
+                id="profilePictureInput"
+              />
+              <label htmlFor="profilePictureInput" className="cursor-pointer">
+                {previewImage ? (
+                  <img
+                    src={previewImage}
+                    alt="Profile Preview"
+                    className="w-20 h-20 object-cover rounded-full border-2 border-blue-400 hover:opacity-80 transition-opacity duration-300"
+                  />
+                ) : (
+                  <div className="w-16 h-16 bg-gray-200 flex items-center justify-center rounded-full border-2 border-gray-300 hover:opacity-80 transition-opacity duration-300">
+                    <span className="text-gray-500 text-sm">Upload</span>
+                  </div>
+                )}
+              </label>
+            </div>
+          </div>
           {/* Name Inputs */}
           <motion.div
             className="grid grid-cols-2 gap-6"
@@ -242,13 +344,13 @@ const Signup = () => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            {loading ? 'Creating Account...' : 'Create Account'}
+            {loading ? "Creating Account..." : "Create Account"}
           </motion.button>
         </form>
 
         {/* Login Redirect */}
         <p className="text-center mt-2 text-black font-medium">
-          Already have an account?{' '}
+          Already have an account?{" "}
           <a
             href="/login"
             className="text-blue-600 hover:text-blue-800 transition-all duration-300 transform hover:underline"

@@ -1,16 +1,32 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { FaUserCircle, FaBars, FaTimes } from "react-icons/fa";
+import { FaUserCircle, FaBars, FaTimes, FaSignOutAlt, FaUser, FaMoneyBillWave } from "react-icons/fa";
 import logo from "../assets/logo.png";
+import { useAuth } from "../hooks/useAuth";
 
 const Navbar = () => {
+  const { user, setUser, loading, logout } = useAuth();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const profileDropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target)) {
+        setIsProfileDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleNavigate = (path) => {
     setMobileMenuOpen(false);
     setActiveDropdown(null);
+    setIsProfileDropdownOpen(false);
     navigate(path);
   };
 
@@ -32,7 +48,13 @@ const Navbar = () => {
   };
 
   const handleProfileClick = () => {
-    handleNavigate("/profile");
+    setIsProfileDropdownOpen(!isProfileDropdownOpen);
+  };
+
+  const handleLogout = () => {
+    logout();
+    setIsProfileDropdownOpen(false);
+    navigate("/login");
   };
 
   return (
@@ -122,13 +144,69 @@ const Navbar = () => {
           </button>
         </div>
 
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-4 relative" ref={profileDropdownRef}>
           <button
             onClick={handleProfileClick}
-            className="text-purple-700 hover:text-purple-900 transition duration-300 flex items-center"
+            className="text-purple-700 hover:text-purple-900 transition duration-300 flex items-center focus:outline-none"
           >
-            <FaUserCircle className="text-3xl transition-transform duration-300 ease-in-out hover:scale-110 cursor-pointer" />
+            {user?.profilePicture ? (
+              <img
+                src={`http://localhost:5001${user.profilePicture}`}
+                alt="Profile"
+                className="w-12 h-12 object-cover rounded-full shadow-lg"
+              />
+            ) : (
+              <FaUserCircle className="text-purple-600 w-10 h-10 p-2 bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 rounded-full shadow-lg" />
+            )}
           </button>
+
+          {/* Profile Dropdown Menu */}
+          {isProfileDropdownOpen && user && (
+            <div className="absolute right-0 top-full mt-4 w-56 bg-white rounded-xl shadow-2xl py-2 z-50 transform transition-all duration-300 ease-in-out translate-x-4">
+              {/* User Info Section */}
+              <div className="px-3 py-2 bg-gradient-to-r from-purple-50 to-pink-50 border-b border-gray-100">
+                <div className="flex items-center space-x-2">
+                  {user?.profilePicture ? (
+                    <img
+                      src={`http://localhost:5001${user.profilePicture}`}
+                      alt="Profile"
+                      className="w-10 h-10 object-cover rounded-full shadow-lg border-2 border-white"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-400 to-pink-400 flex items-center justify-center shadow-lg border-2 border-white">
+                      <FaUserCircle className="text-white text-lg" />
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900 truncate max-w-[120px]">{user?.firstName} {user?.lastName}</p>
+                    <p className="text-xs text-gray-500 truncate max-w-[120px]">{user?.email}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Menu Options */}
+              <div className="py-1">
+                <button
+                  onClick={() => handleNavigate("/profile")}
+                  className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-purple-50 flex items-center gap-2 transition-colors duration-200 group"
+                >
+                  <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center group-hover:bg-purple-200 transition-colors duration-200">
+                    <FaUser className="text-purple-600 text-xs" />
+                  </div>
+                  <span className="font-medium">My Profile</span>
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-red-50 flex items-center gap-2 transition-colors duration-200 group"
+                >
+                  <div className="w-6 h-6 rounded-full bg-red-100 flex items-center justify-center group-hover:bg-red-200 transition-colors duration-200">
+                    <FaSignOutAlt className="text-red-600 text-xs" />
+                  </div>
+                  <span className="font-medium">Logout</span>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </nav>

@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { FaEnvelope, FaUser, FaPhoneAlt, FaQuestionCircle } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 import { toast } from 'react-toastify';
-import apiService from '../services/apiService';
+import { useNavigate } from 'react-router-dom';
 import contactImg from '../assets/contact.jpg';
+import axios from 'axios';
 
 const Contact = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -14,10 +16,27 @@ const Contact = () => {
   });
 
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userEmail, setUserEmail] = useState('');
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    setIsAuthenticated(!!token);
+    if (token) {
+      try {
+        const decodedToken = JSON.parse(atob(token.split('.')[1]));
+        if (decodedToken.exp < Date.now() / 1000) {
+          setIsAuthenticated(false);
+          localStorage.removeItem('token');
+        } else {
+          setIsAuthenticated(true);
+          setUserEmail(decodedToken.email);
+          setFormData(prev => ({ ...prev, email: decodedToken.email }));
+        }
+      } catch (error) {
+        console.error('Error decoding token:', error);
+        setIsAuthenticated(false);
+        localStorage.removeItem('token');
+      }
+    }
   }, []);
 
   const handleChange = (e) => {
@@ -26,27 +45,232 @@ const Contact = () => {
 
   const validateForm = () => {
     const { name, email, phone, message } = formData;
-    if (!name.trim()) return toast.error('Name is required.');
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return toast.error('Invalid email.');
-    if (!/^[0-9]{10}$/.test(phone)) return toast.error('Phone must be 10 digits.');
-    if (!message.trim()) return toast.error('Message cannot be empty.');
+
+    // Name validation - only letters and spaces allowed
+    if (!name.trim()) {
+      toast.error('Name is required.', {
+        duration: 3000,
+        position: 'top-right',
+        style: {
+          background: '#EF4444',
+          color: '#fff',
+          borderRadius: '8px',
+          padding: '12px 24px',
+          fontSize: '14px',
+          fontWeight: '500',
+        },
+      });
+      return false;
+    }
+    if (!/^[a-zA-Z\s]*$/.test(name)) {
+      toast.error('Name can only contain letters and spaces.', {
+        duration: 3000,
+        position: 'top-right',
+        style: {
+          background: '#EF4444',
+          color: '#fff',
+          borderRadius: '8px',
+          padding: '12px 24px',
+          fontSize: '14px',
+          fontWeight: '500',
+        },
+      });
+      return false;
+    }
+
+    // Email validation
+    if (!email.trim()) {
+      toast.error('Email is required.', {
+        duration: 3000,
+        position: 'top-right',
+        style: {
+          background: '#EF4444',
+          color: '#fff',
+          borderRadius: '8px',
+          padding: '12px 24px',
+          fontSize: '14px',
+          fontWeight: '500',
+        },
+      });
+      return false;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast.error('Please enter a valid email address.', {
+        duration: 3000,
+        position: 'top-right',
+        style: {
+          background: '#EF4444',
+          color: '#fff',
+          borderRadius: '8px',
+          padding: '12px 24px',
+          fontSize: '14px',
+          fontWeight: '500',
+        },
+      });
+      return false;
+    }
+
+    // Check if email matches registered user's email
+    if (email !== userEmail) {
+      toast.error('Please use the email address you registered with.', {
+        duration: 3000,
+        position: 'top-right',
+        style: {
+          background: '#EF4444',
+          color: '#fff',
+          borderRadius: '8px',
+          padding: '12px 24px',
+          fontSize: '14px',
+          fontWeight: '500',
+        },
+      });
+      return false;
+    }
+
+    // Phone validation - exactly 10 digits
+    if (!phone.trim()) {
+      toast.error('Phone number is required.', {
+        duration: 3000,
+        position: 'top-right',
+        style: {
+          background: '#EF4444',
+          color: '#fff',
+          borderRadius: '8px',
+          padding: '12px 24px',
+          fontSize: '14px',
+          fontWeight: '500',
+        },
+      });
+      return false;
+    }
+    if (!/^[0-9]{10}$/.test(phone)) {
+      toast.error('Phone number must be exactly 10 digits.', {
+        duration: 3000,
+        position: 'top-right',
+        style: {
+          background: '#EF4444',
+          color: '#fff',
+          borderRadius: '8px',
+          padding: '12px 24px',
+          fontSize: '14px',
+          fontWeight: '500',
+        },
+      });
+      return false;
+    }
+
+    // Message validation
+    if (!message.trim()) {
+      toast.error('Message is required.', {
+        duration: 3000,
+        position: 'top-right',
+        style: {
+          background: '#EF4444',
+          color: '#fff',
+          borderRadius: '8px',
+          padding: '12px 24px',
+          fontSize: '14px',
+          fontWeight: '500',
+        },
+      });
+      return false;
+    }
+
     return true;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!isAuthenticated) return toast.error('Login required to send messages.');
+    
+    // Check authentication first
+    if (!isAuthenticated) {
+      toast.error('Please login to send a message', {
+        duration: 3000,
+        position: 'top-right',
+        style: {
+          background: '#EF4444',
+          color: '#fff',
+          borderRadius: '8px',
+          padding: '12px 24px',
+          fontSize: '14px',
+          fontWeight: '500',
+        },
+      });
+      navigate('/login');
+      return;
+    }
+
+    // Then validate form
     if (!validateForm()) return;
+
     try {
-      const response = await apiService.createContactMessage(formData);
-      if (response.success) {
-        toast.success('Message sent successfully!');
+      const token = localStorage.getItem('token');
+      const headers = { Authorization: `Bearer ${token}` };
+      
+      const response = await axios.post(
+        'http://localhost:5001/api/contacts/submit', 
+        formData,
+        { headers }
+      );
+
+      if (response.data.success) {
+        toast.success('Message sent successfully!', {
+          duration: 3000,
+          position: 'top-right',
+          style: {
+            background: '#10B981',
+            color: '#fff',
+            borderRadius: '8px',
+            padding: '12px 24px',
+            fontSize: '14px',
+            fontWeight: '500',
+          },
+        });
         setFormData({ name: '', email: '', phone: '', message: '' });
       } else {
-        toast.error(response.message || 'Error sending message.');
+        toast.error(response.data.message || 'Error sending message.', {
+          duration: 3000,
+          position: 'top-right',
+          style: {
+            background: '#EF4444',
+            color: '#fff',
+            borderRadius: '8px',
+            padding: '12px 24px',
+            fontSize: '14px',
+            fontWeight: '500',
+          },
+        });
       }
-    } catch {
-      toast.error('Server error. Try again later.');
+    } catch (error) {
+      console.error('Error submitting contact form:', error);
+      if (error.response?.status === 401) {
+        toast.error('Session expired. Please login again.', {
+          duration: 3000,
+          position: 'top-right',
+          style: {
+            background: '#EF4444',
+            color: '#fff',
+            borderRadius: '8px',
+            padding: '12px 24px',
+            fontSize: '14px',
+            fontWeight: '500',
+          },
+        });
+        navigate('/login');
+      } else {
+        toast.error(error.response?.data?.message || 'Server error. Try again later.', {
+          duration: 3000,
+          position: 'top-right',
+          style: {
+            background: '#EF4444',
+            color: '#fff',
+            borderRadius: '8px',
+            padding: '12px 24px',
+            fontSize: '14px',
+            fontWeight: '500',
+          },
+        });
+      }
     }
   };
 
@@ -74,7 +298,18 @@ const Contact = () => {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <h2 className="text-3xl font-semibold text-center text-black mb-6">Get in Touch</h2>
+          <h2 className="text-3xl font-semibold text-center text-black mb-2">Get in Touch</h2>
+          {!isAuthenticated && (
+            <div className="bg-yellow-100  text-yellow-700 p-4 mb-4 rounded">
+              <p className="font-normal">Please login to send a message.</p>
+              <button
+                onClick={() => navigate('/login')}
+                className="mt-2 bg-yellow-500 text-white px-4 py-1 rounded hover:bg-yellow-600 transition duration-300"
+              >
+                Login Now
+              </button>
+            </div>
+          )}
           <form onSubmit={handleSubmit} className="space-y-5">
             {['name', 'email', 'phone'].map((field, index) => (
               <motion.div 
@@ -94,6 +329,7 @@ const Contact = () => {
                   onChange={handleChange}
                   placeholder={`Enter your ${field}`}
                   className="w-full p-2 px-10 border rounded-lg focus:ring-2 focus:ring-purple-500 placeholder-gray-500 text-gray-800"
+                  disabled={!isAuthenticated}
                 />
               </motion.div>
             ))}
@@ -105,17 +341,23 @@ const Contact = () => {
                 onChange={handleChange}
                 placeholder="Enter your message"
                 className="w-full py-3 px-4 placeholder-gray-500 border rounded-lg text-gray-800 focus:ring-2 focus:ring-purple-500 resize-none h-32"
+                disabled={!isAuthenticated}
               ></textarea>
             </motion.div>
 
             <div className="flex justify-center">
               <motion.button
                 type="submit"
-                className="bg-blue-600 text-white px-6 py-3 rounded-lg shadow-lg font-semibold hover:bg-blue-700 transition duration-300"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                className={`px-6 py-3 rounded-lg shadow-lg font-semibold transition duration-300 ${
+                  isAuthenticated 
+                    ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                    : 'bg-gray-400 text-white cursor-not-allowed'
+                }`}
+                whileHover={{ scale: isAuthenticated ? 1.05 : 1 }}
+                whileTap={{ scale: isAuthenticated ? 0.95 : 1 }}
+                disabled={!isAuthenticated}
               >
-                Contact Us
+                {isAuthenticated ? 'Contact Us' : 'Please Login First'}
               </motion.button>
             </div>
           </form>
@@ -128,7 +370,7 @@ const Contact = () => {
         <div className="text-left space-y-4">
           <div className="bg-white p-4 rounded-lg shadow">
             <h4 className="text-lg font-semibold flex items-center"><FaQuestionCircle className="mr-2 text-blue-600" /> How do I book an appointment?</h4>
-            <p className="text-gray-700 mt-2">Fill out the contact form, and we’ll guide you through the appointment process.</p>
+            <p className="text-gray-700 mt-2">Fill out the contact form, and we'll guide you through the appointment process.</p>
           </div>
           <div className="bg-white p-4 rounded-lg shadow">
             <h4 className="text-lg font-semibold flex items-center"><FaQuestionCircle className="mr-2 text-blue-600" /> Is my data secure?</h4>

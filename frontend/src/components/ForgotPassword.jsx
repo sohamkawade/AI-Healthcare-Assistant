@@ -1,54 +1,78 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import apiService from '../services/apiService';
 import { motion } from 'framer-motion';
+import axios from 'axios';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
+  const [otp, setOtp] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [showOtpForm, setShowOtpForm] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  // Handle input change
-  const handleChange = (e) => {
-    setEmail(e.target.value);
-    setError('');
-  };
+  useEffect(() => {
+    // Get logged in user's email if available
+    const loggedInEmail = localStorage.getItem('userEmail');
+    if (loggedInEmail) {
+      setEmail(loggedInEmail);
+    }
+  }, []);
 
-  // Validate email
   const validateEmail = () => {
     if (!email) {
       toast.error('Email is required');
       return false;
     }
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailPattern.test(email)) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
       toast.error('Please enter a valid email address');
       return false;
     }
     return true;
   };
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateEmail()) return;
 
     setLoading(true);
     try {
+      console.log('Submitting email:', email);
       const response = await apiService.forgotPassword(email);
 
-      if (response?.success) {
-        toast.success('Reset link sent to your email!');
-        navigate('/login');
-      } else {
-        throw new Error(response?.message || 'Failed to send reset link');
+      if (response.success) {
+        toast.success('OTP generated successfully!');
+        console.log('Your OTP:', response.otp); // For development
+        setShowOtpForm(true);
       }
     } catch (error) {
-      console.error('Forgot password error:', error);
-      const errorMessage = error?.response?.data?.message || error.message || 'Failed to send reset link. Please try again.';
-      setError(errorMessage);
+      console.error('Error details:', error);
+      const errorMessage = error.response?.data?.message || 'Failed to process request';
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    if (!otp || !newPassword) {
+      toast.error('Please enter both OTP and new password');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await apiService.resetPassword(email, otp, newPassword);
+      if (response.success) {
+        toast.success('Password reset successful!');
+        navigate('/login');
+      }
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || 'Failed to reset password';
       toast.error(errorMessage);
     } finally {
       setLoading(false);
@@ -57,39 +81,69 @@ const ForgotPassword = () => {
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-custom-light-blue via-custom-light-teal to-custom-light-cyan">
-      <div className="relative bg-white shadow-lg rounded-lg p-10 max-w-md w-full">
-        <h2 className="text-2xl font-bold text-center text-black mb-4">Forgot Password</h2>
-        <form onSubmit={handleSubmit}>
-          <motion.div
-            className="mb-5"
-            initial={{ opacity: 0, x: -30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <label htmlFor="email" className="block text-black font-semibold mb-2">Email</label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={handleChange}
-              required
-              className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500 text-gray-800"
-              placeholder="Enter your email"
-            />
-          </motion.div>
-          <button
-            type="submit"
-            disabled={loading}
-            className={`w-full ${loading ? 'bg-gray-400' : 'bg-purple-600'} text-white font-semibold py-2 rounded-lg hover:bg-purple-700 transition duration-300 transform hover:scale-105 shadow-lg`}
-          >
-            {loading ? 'Sending...' : 'Send Reset Link'}
-          </button>
-          {error && <p id="email-error" className="text-red-500 text-sm text-center mt-2">{error}</p>}
-        </form>
-        <p className="text-center mt-4 text-black">
-          Remembered your password?{' '}
-          <a href="/login" className="text-purple-600 hover:underline font-semibold">Login</a>
-        </p>
+      <div className="bg-white p-8 rounded-lg shadow-lg w-96">
+        <h2 className="text-2xl font-bold mb-6 text-center">Forgot Password</h2>
+        
+        {!showOtpForm ? (
+          // Step 1: Get OTP
+          <form onSubmit={handleSubmit}>
+            <div className="mb-4">
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email"
+                className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-purple-500"
+                required
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className={`w-full ${loading ? 'bg-gray-400' : 'bg-purple-600'} text-white p-2 rounded hover:bg-purple-700 transition duration-300`}
+            >
+              {loading ? 'Generating...' : 'Get OTP'}
+            </button>
+          </form>
+        ) : (
+          // Step 2: Enter OTP and new password
+          <form onSubmit={handleResetPassword}>
+            <div className="mb-4">
+              <input
+                type="text"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+                placeholder="Enter OTP"
+                className="w-full p-2 border rounded mb-4 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                required
+              />
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Enter new password"
+                className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-purple-500"
+                required
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className={`w-full ${loading ? 'bg-gray-400' : 'bg-purple-600'} text-white p-2 rounded hover:bg-purple-700 transition duration-300`}
+            >
+              {loading ? 'Resetting...' : 'Reset Password'}
+            </button>
+          </form>
+        )}
+
+        <div className="text-center mt-4">
+          <p className="text-gray-600">
+            Remember your password?{' '}
+            <a href="/login" className="text-purple-600 hover:underline">
+              Login here
+            </a>
+          </p>
+        </div>
       </div>
     </div>
   );

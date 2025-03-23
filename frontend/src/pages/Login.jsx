@@ -27,11 +27,11 @@ const Login = () => {
     }
 
     try {
-      const data = await apiService.login(email, password);
+      const response = await apiService.login(email, password);
 
-      if (data && typeof data === 'string' && data.startsWith('eyJ')) {
-        const token = data;
-
+      if (response?.success && response?.data?.token) {
+        const token = response.data.token;
+        
         localStorage.setItem('token', token);
         const decodedToken = JSON.parse(atob(token.split('.')[1]));
         localStorage.setItem('user', JSON.stringify(decodedToken));
@@ -40,9 +40,9 @@ const Login = () => {
         setUser(decodedToken);
 
         toast.success('Logged in successfully!', {theme:"colored"});
-        navigate('/dashboard');
+        navigate('/profile');
       } else {
-        throw new Error('Login failed, unexpected response format. Missing token.');
+        throw new Error(response?.message || 'Login failed. Invalid response format.');
       }
     } catch (error) {
       const errorMessage = error?.response?.data?.message || error.message || 'An unexpected error occurred. Please try again.';
