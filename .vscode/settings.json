@@ -1,7 +1,0 @@
-{
-    "git.enabled": true,
-    "explorer.excludeGitIgnore": false,
-    "git.terminalGitEditor": false,
-    "github.copilot.chat.edits.suggestRelatedFilesFromGitHistory": true,
-    "search.useGlobalIgnoreFiles": false
-}
