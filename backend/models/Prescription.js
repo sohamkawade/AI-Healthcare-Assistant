@@ -45,6 +45,16 @@ const prescriptionSchema = new mongoose.Schema({
     type: String,
     enum: ['active', 'completed', 'cancelled'],
     default: 'active'
+  },
+  deletedBy: {
+    doctor: {
+      type: Boolean,
+      default: false
+    },
+    patient: {
+      type: Boolean,
+      default: false
+    }
   }
 }, {
   timestamps: true

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaEnvelope, FaUser, FaPhoneAlt, FaQuestionCircle } from 'react-icons/fa';
 import { motion } from 'framer-motion';
-import { toast } from 'react-toastify';
+import { toast, Toaster } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import contactImg from '../assets/contact.jpg';
 import axios from 'axios';
@@ -218,7 +218,7 @@ const Contact = () => {
           duration: 3000,
           position: 'top-right',
           style: {
-            background: '#10B981',
+            background: '#22C55E',
             color: '#fff',
             borderRadius: '8px',
             padding: '12px 24px',
@@ -226,6 +226,7 @@ const Contact = () => {
             fontWeight: '500',
           },
         });
+        navigate("/");
         setFormData({ name: '', email: '', phone: '', message: '' });
       } else {
         toast.error(response.data.message || 'Error sending message.', {
@@ -276,6 +277,32 @@ const Contact = () => {
 
   return (
     <div className="flex flex-col items-center min-h-screen bg-gradient-to-br from-custom-light-blue via-custom-light-teal to-custom-light-cyan p-6">
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: '#fff',
+            color: '#363636',
+            borderRadius: '8px',
+            padding: '12px 24px',
+            fontSize: '14px',
+            fontWeight: '500',
+          },
+          success: {
+            style: {
+              background: '#22C55E',
+              color: '#fff',
+            },
+          },
+          error: {
+            style: {
+              background: '#EF4444',
+              color: '#fff',
+            },
+          }
+        }}
+      />
       <div className="flex flex-col md:flex-row items-start w-full max-w-7xl gap-28 h-[600px]">
         {/* Left Section - Image */}
         <motion.div 

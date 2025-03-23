@@ -1,23 +1,36 @@
 import React, { useState, useEffect } from "react";
-import { toast, ToastContainer } from "react-toastify";
+import { toast, Toaster } from "react-hot-toast";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import apiService from "../services/apiService";
 import { useAuth } from "../hooks/useAuth";
-import 'react-toastify/dist/ReactToastify.css';
 import { FaCheck, FaTimes, FaCheckCircle, FaTimesCircle, FaCalendarAlt, FaClock, FaVideo, FaUser, FaStar } from 'react-icons/fa';
 import moment from 'moment';
 
 // Single toast configuration object
 const toastConfig = {
+  duration: 3000,
   position: "top-right",
-  autoClose: 2000,
-  hideProgressBar: false,
-  closeOnClick: true,
-  pauseOnHover: true,
-  draggable: true,
-  progress: undefined,
-  theme: "light"
+  style: {
+    background: '#fff',
+    color: '#363636',
+    borderRadius: '8px',
+    padding: '12px 24px',
+    fontSize: '14px',
+    fontWeight: '500',
+  },
+  success: {
+    style: {
+      background: '#22C55E',
+      color: '#fff',
+    },
+  },
+  error: {
+    style: {
+      background: '#EF4444',
+      color: '#fff',
+    },
+  }
 };
 
 const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -43,7 +56,6 @@ const Appointment = () => {
       const userId = localStorage.getItem("userId");
       const userType = localStorage.getItem("userType");
 
-
       if (!token || !userId) {
         toast.error("Please log in to access the appointment page.", toastConfig);
         navigate("/login");
@@ -55,9 +67,19 @@ const Appointment = () => {
       const decodedToken = JSON.parse(atob(token.split('.')[1]));
       const isPatient = !decodedToken.specialization;
 
-
       if (!isPatient) {
-        toast.warning("Only patients can book appointments. Please login with a patient profile.", toastConfig);
+        toast("Only patients can book appointments. Please login with a patient profile.", {
+          duration: 2000,
+          position: 'top-right',
+          style: {
+            background: '#F97316',
+            color: '#fff',
+            borderRadius: '8px',
+            padding: '12px 24px',
+            fontSize: '14px',
+            fontWeight: '500',
+          },
+        });
         setTimeout(() => {
           navigate("/dashboard");
         }, 2000);
@@ -447,17 +469,31 @@ const Appointment = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-custom-light-blue via-custom-light-teal to-custom-light-cyan p-6">
-      <ToastContainer
+      <Toaster
         position="top-right"
-        autoClose={2000}
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="light"
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: '#fff',
+            color: '#363636',
+            borderRadius: '8px',
+            padding: '12px 24px',
+            fontSize: '14px',
+            fontWeight: '500',
+          },
+          success: {
+            style: {
+              background: '#22C55E',
+              color: '#fff',
+            },
+          },
+          error: {
+            style: {
+              background: '#EF4444',
+              color: '#fff',
+            },
+          }
+        }}
       />
       <div className="p-6 max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
         {Array.isArray(doctors) && doctors.length > 0 ? (

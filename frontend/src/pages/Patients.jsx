@@ -9,7 +9,7 @@ import apiService from '../services/apiService';
 const Patients = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState('lastVisit');
@@ -25,8 +25,17 @@ const Patients = () => {
     { value: '1year', label: 'Last Year' }
   ];
 
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/login');
+    }
+  }, [authLoading, user, navigate]);
+
   useEffect(() => {
     const fetchPatients = async () => {
+      if (!user?._id) return;
+
       try {
         setLoading(true);
         const response = await axios.get(
@@ -48,13 +57,15 @@ const Patients = () => {
               lastName: patient.lastName,
               profilePicture: patient.profilePicture,
               contactNumber: patient.contactNumber,
-              lastVisit: appointment.startTime,
+              lastVisit: appointment.slotDate,
               visitCount: 1
             };
           } else {
             acc[patient._id].visitCount++;
-            if (new Date(appointment.startTime) > new Date(acc[patient._id].lastVisit)) {
-              acc[patient._id].lastVisit = appointment.startTime;
+            const currentDate = new Date(appointment.slotDate);
+            const lastVisitDate = new Date(acc[patient._id].lastVisit);
+            if (currentDate > lastVisitDate) {
+              acc[patient._id].lastVisit = appointment.slotDate;
             }
           }
           return acc;
@@ -63,14 +74,22 @@ const Patients = () => {
         setPatients(Object.values(uniquePatients));
       } catch (error) {
         console.error('Error fetching patients:', error);
-        toast.error('Failed to fetch patients');
+        toast.error('Failed to fetch patients', {
+          style: {
+            background: '#EF4444',
+            color: '#FFFFFF',
+            borderRadius: '8px',
+            padding: '12px 24px',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+          }
+        });
       } finally {
         setLoading(false);
       }
     };
 
     fetchPatients();
-  }, [user._id]);
+  }, [user?._id]);
 
   const toggleSort = (field) => {
     if (sortBy === field) {
@@ -82,29 +101,40 @@ const Patients = () => {
   };
 
   const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
+    if (!dateString) return 'No visits yet';
+    
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return 'Invalid date';
 
-    if (date.toDateString() === today.toDateString()) {
-      return 'Today';
-    } else if (date.toDateString() === yesterday.toDateString()) {
-      return 'Yesterday';
-    } else {
-      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      const day = date.getDate();
-      const month = months[date.getMonth()];
-      const year = date.getFullYear();
-      return `${day} ${month} ${year}`;
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      if (date.toDateString() === today.toDateString()) {
+        return 'Today';
+      } else if (date.toDateString() === yesterday.toDateString()) {
+        return 'Yesterday';
+      } else {
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const day = date.getDate();
+        const month = months[date.getMonth()];
+        const year = date.getFullYear();
+        return `${day} ${month} ${year}`;
+      }
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Invalid date';
     }
   };
 
   const sortedPatients = [...patients].sort((a, b) => {
     if (sortBy === 'lastVisit') {
+      const dateA = a.lastVisit ? new Date(a.lastVisit) : new Date(0);
+      const dateB = b.lastVisit ? new Date(b.lastVisit) : new Date(0);
       return sortOrder === 'asc' 
-        ? new Date(a.lastVisit) - new Date(b.lastVisit)
-        : new Date(b.lastVisit) - new Date(a.lastVisit);
+        ? dateA - dateB
+        : dateB - dateA;
     }
     return sortOrder === 'asc'
       ? a.visitCount - b.visitCount
@@ -113,8 +143,8 @@ const Patients = () => {
 
   const handlePatientClick = (patient) => {
     if (location.state?.from === 'write-prescription') {
-        navigate('/new-prescription', { 
-          state: { 
+      navigate('/new-prescription', { 
+        state: { 
           patientId: patient._id,
           patientName: `${patient.firstName} ${patient.lastName}`,
           doctorId: location.state.doctorId,
@@ -123,19 +153,37 @@ const Patients = () => {
         }
       });
     } else {
-      navigate(`/patient-records`);
+      navigate(`/patient-records/${patient._id}`, {
+        state: {
+          patientId: patient._id,
+          patientName: `${patient.firstName} ${patient.lastName}`,
+          doctorId: user._id,
+          doctorName: `${user.firstName} ${user.lastName}`,
+          specialization: user.specialization
+        }
+      });
     }
   };
 
-  const fetchPrescriptions = async (patientId) => {
-    try {
-      const response = await apiService.getPatientPrescriptions(patientId);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching prescriptions:', error);
-      return [];
-    }
-  };
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-custom-light-blue via-custom-light-teal to-custom-light-cyan">
+        <div className="flex justify-center items-center h-screen">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-custom-light-blue via-custom-light-teal to-custom-light-cyan">
+        <div className="flex justify-center items-center h-screen">
+          <p className="text-gray-600">Please log in to view your patients.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-custom-light-blue via-custom-light-teal to-custom-light-cyan">
@@ -223,7 +271,9 @@ const Patients = () => {
             <div className="divide-y divide-gray-200">
               {sortedPatients.map((patient) => (
                 <div
-                  className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-gray-50 transition-colors"
+                  key={patient._id}
+                  onClick={() => handlePatientClick(patient)}
+                  className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-gray-50 transition-colors cursor-pointer"
                 >
                   <div className="col-span-4">
                     <div className="flex items-center space-x-4">

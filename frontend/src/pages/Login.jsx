@@ -1,10 +1,9 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify'; 
+import { toast, Toaster } from 'react-hot-toast';
 import apiService from '../services/apiService';
 import { AuthContext } from '../context/AuthContext';
 import { motion } from 'framer-motion';
-import "react-toastify/dist/ReactToastify.css";
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -21,7 +20,7 @@ const Login = () => {
 
     if (!email || !password) {
       setError('Email and password are required.');
-      toast.error('Email and password are required.', {theme:"colored"});
+      toast.error('Email and password are required.');
       setLoading(false);
       return;
     }
@@ -39,15 +38,42 @@ const Login = () => {
         setToken(token);
         setUser(decodedToken);
 
-        toast.success('Logged in successfully!', {theme:"colored"});
-        navigate('/profile');
+        // Show success toast and wait for it to be visible
+        toast.success('Logged in successfully!', {
+          duration: 2000,
+          position: 'top-right',
+          style: {
+            background: '#22C55E',
+            color: '#fff',
+            borderRadius: '8px',
+            padding: '12px 24px',
+            fontSize: '14px',
+            fontWeight: '500',
+          },
+        });
+
+        // Wait for 1 second before navigating
+        setTimeout(() => {
+          navigate('/profile');
+        }, 1000);
       } else {
         throw new Error(response?.message || 'Login failed. Invalid response format.');
       }
     } catch (error) {
       const errorMessage = error?.response?.data?.message || error.message || 'An unexpected error occurred. Please try again.';
       setError(errorMessage);
-      toast.error(errorMessage, {theme:"colored"});
+      toast.error(errorMessage, {
+        duration: 3000,
+        position: 'top-right',
+        style: {
+          background: '#EF4444',
+          color: '#fff',
+          borderRadius: '8px',
+          padding: '12px 24px',
+          fontSize: '14px',
+          fontWeight: '500',
+        },
+      });
     } finally {
       setLoading(false);
     }
@@ -55,6 +81,38 @@ const Login = () => {
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-custom-light-blue via-custom-light-teal to-custom-light-cyan ">
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: '#fff',
+            color: '#363636',
+            borderRadius: '8px',
+            padding: '12px 24px',
+            fontSize: '14px',
+            fontWeight: '500',
+          },
+          success: {
+            style: {
+              background: '#22C55E',
+              color: '#fff',
+            },
+          },
+          error: {
+            style: {
+              background: '#EF4444',
+              color: '#fff',
+            },
+          },
+          warning: {
+            style: {
+              background: '#F97316',
+              color: '#fff',
+            },
+          },
+        }}
+      />
       <motion.div
         className="bg-white shadow-lg rounded-lg p-7 max-w-lg"
         initial={{ opacity: 0, y: -20 }}
@@ -131,7 +189,7 @@ const Login = () => {
         </form>
 
         <p className="text-center mt-2 text-black font-medium">
-          Don’t have an account?{' '}
+          Don't have an account?{' '}
           <span className="text-blue-700 font-medium">Choose an option to register:</span>
         </p>
 

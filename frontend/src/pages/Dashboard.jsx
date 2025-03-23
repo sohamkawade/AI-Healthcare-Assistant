@@ -50,7 +50,6 @@ const Dashboard = () => {
   const { user, role, loading: authLoading, setRole, setUser } = useAuth();
   const navigate = useNavigate();
   const [appointments, setAppointments] = useState([]);
-  const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
@@ -283,33 +282,6 @@ const Dashboard = () => {
     }
   }, [authLoading, user?._id, role, fetchAppointments]);
 
-  // Load notifications from localStorage
-  useEffect(() => {
-    const loadNotifications = () => {
-      const savedNotifications = localStorage.getItem("notifications");
-      if (savedNotifications) {
-        const parsedNotifications = JSON.parse(savedNotifications);
-        const oneDayAgo = new Date();
-        oneDayAgo.setDate(oneDayAgo.getDate() - 1);
-
-        const recentNotifications = parsedNotifications.filter(
-          (notification) => {
-            const notificationDate = new Date(notification.timestamp);
-            return notificationDate >= oneDayAgo;
-          }
-        );
-
-        localStorage.setItem(
-          "notifications",
-          JSON.stringify(recentNotifications)
-        );
-        setNotifications(recentNotifications);
-      }
-    };
-
-    loadNotifications();
-  }, []);
-
   // Quick actions data fetching
   useEffect(() => {
     const fetchQuickActionsData = async () => {
@@ -348,23 +320,6 @@ const Dashboard = () => {
 
     fetchQuickActionsData();
   }, [user, role]);
-
-  // Mark notification as read
-  const markNotificationAsRead = async (notificationId) => {
-    try {
-      await notificationsApi.markAsRead(notificationId);
-      setNotifications((prevNotifications) =>
-        prevNotifications.map((notification) =>
-          notification._id === notificationId
-            ? { ...notification, isRead: true }
-            : notification
-        )
-      );
-    } catch (error) {
-      console.error("Error marking notification as read:", error);
-      toast.error("Failed to update notification");
-    }
-  };
 
   const checkAppointmentStatus = (appointment) => {
     const appointmentDateTime = new Date(appointment.startTime);
@@ -531,54 +486,59 @@ const Dashboard = () => {
       // Make the API call
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        `${API_BASE_URL}/api/appointments/complete/${appointmentId}`,
+        `${API_BASE_URL}/appointments/complete/${appointmentId}`,
         completionDetails,
         { headers: { Authorization: `Bearer ${token}` } }
       );
   
       if (response.data.success) {
-        // Create notifications for both parties
+        // Create notifications for both doctor and patient
         const doctorNotification = {
-          id: Date.now() + 1,
+          id: Date.now(),
           type: "completed",
-          message:
-            role === "doctor"
-              ? `You marked the appointment with ${appointment.patientId.firstName} ${appointment.patientId.lastName} as completed`
-              : `${user.firstName} ${user.lastName} marked their appointment as completed`,
+          message: `Appointment with ${appointment.patientId.firstName} ${appointment.patientId.lastName} has been completed`,
           timestamp: new Date(),
           appointmentDate: appointment.slotDate,
           recipientType: "doctor",
           recipientId: appointment.docId._id,
         };
-  
+
         const patientNotification = {
-          id: Date.now() + 2,
+          id: Date.now() + 1,
           type: "completed",
-          message:
-            role === "doctor"
-              ? `Dr. ${user.firstName} ${user.lastName} marked your appointment as completed`
-              : `You marked your appointment with Dr. ${appointment.docId.firstName} ${appointment.docId.lastName} as completed`,
+          message: `Your appointment with Dr. ${appointment.docId.firstName} ${appointment.docId.lastName} has been completed`,
           timestamp: new Date(),
           appointmentDate: appointment.slotDate,
           recipientType: "patient",
           recipientId: appointment.patientId._id,
         };
-  
-        // Update notifications for both parties
-        const updatedNotifications = [...notifications];
+
+        // Get existing notifications from localStorage
+        const savedNotifications = localStorage.getItem("notifications");
+        let updatedNotifications = [];
+        
+        if (savedNotifications) {
+          try {
+            updatedNotifications = JSON.parse(savedNotifications);
+          } catch (error) {
+            console.error("Error parsing saved notifications:", error);
+            updatedNotifications = [];
+          }
+        }
+
+        // Add new notifications
         updatedNotifications.unshift(doctorNotification);
         updatedNotifications.unshift(patientNotification);
-  
-        localStorage.setItem(
-          "notifications",
-          JSON.stringify(updatedNotifications)
+
+        // Save back to localStorage
+        localStorage.setItem("notifications", JSON.stringify(updatedNotifications));
+        setAppointments((prevAppointments) =>
+          prevAppointments.map((apt) =>
+            apt._id === appointmentId ? { ...apt, status: "completed", paymentStatus: "paid" } : apt
+          )
         );
-        setNotifications(updatedNotifications);
-  
-        // Force refresh appointments to ensure both parties see the update
-        await fetchAppointments();
-  
-        toast.success(`Appointment completed by ${completerName}`);
+        fetchAppointments();
+        toast.success("Appointment completed successfully!");
       } else {
         // If API call fails, revert the local changes
         setAppointments((prevAppointments) =>
@@ -715,14 +675,11 @@ const Dashboard = () => {
       );
 
       if (response.data.success) {
-        // Create notifications for both parties
+        // Create notifications for both doctor and patient
         const doctorNotification = {
-          id: Date.now() + 1,
+          id: Date.now(),
           type: "cancelled",
-          message:
-            role === "doctor"
-              ? `You cancelled the appointment with ${appointment.patientId.firstName} ${appointment.patientId.lastName}`
-              : `${user.firstName} ${user.lastName} cancelled their appointment`,
+          message: `Appointment with ${appointment.patientId.firstName} ${appointment.patientId.lastName} has been cancelled`,
           timestamp: new Date(),
           appointmentDate: appointment.slotDate,
           recipientType: "doctor",
@@ -730,288 +687,55 @@ const Dashboard = () => {
         };
 
         const patientNotification = {
-          id: Date.now() + 2,
+          id: Date.now() + 1,
           type: "cancelled",
-          message:
-            role === "doctor"
-              ? `Dr. ${user.firstName} ${user.lastName} cancelled your appointment`
-              : `You cancelled your appointment with Dr. ${appointment.docId.firstName} ${appointment.docId.lastName}`,
+          message: `Your appointment with Dr. ${appointment.docId.firstName} ${appointment.docId.lastName} has been cancelled`,
           timestamp: new Date(),
           appointmentDate: appointment.slotDate,
           recipientType: "patient",
           recipientId: appointment.patientId._id,
         };
 
-        // Update notifications for both parties
-        const updatedNotifications = [...notifications];
+        // Get existing notifications from localStorage
+        const savedNotifications = localStorage.getItem("notifications");
+        let updatedNotifications = [];
+        
+        if (savedNotifications) {
+          try {
+            updatedNotifications = JSON.parse(savedNotifications);
+          } catch (error) {
+            console.error("Error parsing saved notifications:", error);
+            updatedNotifications = [];
+          }
+        }
+
+        // Add new notifications
         updatedNotifications.unshift(doctorNotification);
         updatedNotifications.unshift(patientNotification);
 
-        localStorage.setItem(
-          "notifications",
-          JSON.stringify(updatedNotifications)
-        );
-        setNotifications(updatedNotifications);
-
-        // Force refresh appointments to ensure both parties see the update
-        await fetchAppointments();
-
-        toast.success(`Appointment cancelled by ${cancellerName}`);
-      } else {
-        // If API call fails, revert the local changes
+        // Save back to localStorage
+        localStorage.setItem("notifications", JSON.stringify(updatedNotifications));
         setAppointments((prevAppointments) =>
           prevAppointments.map((apt) =>
-            apt._id === appointmentId ? appointment : apt
+            apt._id === appointmentId ? { ...apt, status: "cancelled" } : apt
           )
         );
-        toast.error("Failed to cancel appointment on server");
+        fetchAppointments();
+
+        toast.success(`Appointment cancelled by ${cancellerName}`);
       }
     } catch (error) {
-      console.error("Error cancelling appointment:", error);
+      console.error("Error completing appointment:", error);
       // Revert local changes if there's an error
       setAppointments((prevAppointments) =>
         prevAppointments.map((apt) =>
           apt._id === appointmentId ? appointment : apt
         )
       );
-      toast.error(
-        error.response?.data?.message || "Failed to cancel appointment"
-      );
+      toast.error(error.response?.data?.message || "Failed to complete appointment");
     }
   };
-
-  const getNotificationBadgeColor = () => {
-    if (notifications.length === 0) return "bg-gray-500";
-
-    // Check if there are any completed appointments
-    const hasCompleted = notifications.some((n) => n.type === "completed");
-    if (hasCompleted) return "bg-green-500";
-
-    // Check if there are any cancelled appointments
-    const hasCancelled = notifications.some((n) => n.type === "cancelled");
-    if (hasCancelled) return "bg-red-500";
-
-    // Check if there are any missed appointments
-    const hasMissed = notifications.some((n) => n.type === "missed");
-    if (hasMissed) return "bg-yellow-500";
-
-    // Default color for other notifications
-    return "bg-blue-500";
-  };
-
-  const filteredAppointments = appointments.filter((appointment) => {
-    // Filter by search query
-    const matchesSearch =
-      searchQuery === "" ||
-      (role === "doctor"
-        ? `${appointment.patientId?.firstName} ${appointment.patientId?.lastName}`
-            .toLowerCase()
-            .includes(searchQuery.toLowerCase())
-        : `Dr. ${appointment.docId?.firstName} ${appointment.docId?.lastName}`
-            .toLowerCase()
-            .includes(searchQuery.toLowerCase()));
-
-    // For cancelled appointments
-    if (appointment.status === "cancelled") {
-      const now = new Date();
-      const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-      const cancelledDate = new Date(
-        appointment.cancelledAt || appointment.updatedAt
-      );
-
-      // Show cancelled appointments within 24 hours
-      const isWithin24Hours = cancelledDate > oneDayAgo;
-
-      // For doctors: show ALL appointments where they are the doctor
-      // For patients: show only their own appointments
-      const shouldShow =
-        role === "doctor"
-          ? appointment.docId?._id === user?._id // Show ALL appointments where they are the doctor
-          : appointment.patientId?._id === user?._id; // Show only patient's own appointments
-
-      // Show cancelled appointments if:
-      // 1. They match the search query
-      // 2. They're within 24 hours
-      // 3. They belong to the current user (based on role)
-      // 4. Filter status matches
-      return (
-        matchesSearch &&
-        (filterStatus === "all" || filterStatus === "cancelled") &&
-        isWithin24Hours &&
-        shouldShow
-      );
-    }
-
-    // For completed appointments, show only within 24 hours
-    if (appointment.status === "completed") {
-      const now = new Date();
-      const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-      const completedDate = new Date(
-        appointment.completedAt || appointment.updatedAt
-      );
-      return (
-        matchesSearch &&
-        (filterStatus === "all" || filterStatus === "completed") &&
-        completedDate > oneDayAgo &&
-        (role === "doctor"
-          ? appointment.docId?._id === user?._id
-          : appointment.patientId?._id === user?._id)
-      );
-    }
-
-    // For other statuses (pending, confirmed), show all that belong to the current user
-    return (
-      matchesSearch &&
-      (filterStatus === "all" || appointment.status === filterStatus) &&
-      (role === "doctor"
-        ? appointment.docId?._id === user?._id
-        : appointment.patientId?._id === user?._id)
-    );
-  });
-
-  // Sort appointments with cancelled and completed ones at the bottom
-  const sortedAppointments = [...filteredAppointments].sort((a, b) => {
-    // First sort by status (completed and cancelled last)
-    if (
-      (a.status === "completed" || a.status === "cancelled") &&
-      b.status !== "completed" &&
-      b.status !== "cancelled"
-    )
-      return 1;
-    if (
-      a.status !== "completed" &&
-      a.status !== "cancelled" &&
-      (b.status === "completed" || b.status === "cancelled")
-    )
-      return -1;
-
-    // Then sort by date
-    if (sortBy === "date") {
-      const dateA = new Date(a.slotDate);
-      const dateB = new Date(b.slotDate);
-      if (dateA.getTime() !== dateB.getTime()) {
-        return dateA - dateB;
-      }
-      return a.slotTime.localeCompare(b.slotTime);
-    }
-
-    // Then sort by name
-    if (sortBy === "name") {
-      return role === "doctor"
-        ? `${a.patientId?.firstName} ${a.patientId?.lastName}`.localeCompare(
-            `${b.patientId?.firstName} ${b.patientId?.lastName}`
-          )
-        : `Dr. ${a.docId?.firstName} ${a.docId?.lastName}`.localeCompare(
-            `Dr. ${b.docId?.firstName} ${b.docId?.lastName}`
-          );
-    }
-    return 0;
-  });
-
-  // Remove the cleanup effect that was causing issues
-  useEffect(() => {
-    const cleanupNotifications = () => {
-      const now = new Date();
-      const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-
-      // Clean up notifications older than 24 hours
-      setNotifications((prevNotifications) => {
-        const updatedNotifications = prevNotifications.filter(
-          (notification) => {
-            const notificationTime = new Date(notification.timestamp);
-            return notificationTime > twentyFourHoursAgo;
-          }
-        );
-
-        localStorage.setItem(
-          "notifications",
-          JSON.stringify(updatedNotifications)
-        );
-        return updatedNotifications;
-      });
-    };
-
-    // Run cleanup every minute
-    const cleanupInterval = setInterval(cleanupNotifications, 60 * 1000);
-
-    // Run initial cleanup
-    cleanupNotifications();
-
-    // Cleanup interval on component unmount
-    return () => clearInterval(cleanupInterval);
-  }, []);
-
-  // Add handleQuickAction function at the main component level
-  const handleQuickAction = useCallback(
-    (action) => {
-      if (!user?._id) {
-        toast.error("Please log in to continue");
-        navigate("/login");
-        return;
-      }
-
-      switch (action) {
-        case "view-patients":
-          navigate("/patients");
-          break;
-        case "write-prescription":
-          navigate("/new-prescription", {
-            state: {
-              docId: user._id,
-              doctorName:
-                user.firstName && user.lastName
-                  ? `Dr. ${user.firstName} ${user.lastName}`
-                  : "Dr. Unknown",
-              specialization: user.specialization || "General Physician",
-            },
-          });
-          break;
-        case "book-appointment":
-          navigate("/appointment");
-          break;
-        case "view-prescriptions":
-          // Route doctors to doctor-prescriptions and patients to prescriptions
-          navigate(
-            role === "doctor" ? "/doctor-prescriptions" : "/prescriptions"
-          );
-          break;
-        case "doctor-prescriptions":
-          navigate("/doctor-prescriptions");
-          break;
-        case "ai-chat":
-          navigate("/aichat");
-          break;
-        default:
-      }
-    },
-    [navigate, role, user]
-  );
-
-  const fetchPaymentHistory = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await axios.get(
-        `${API_BASE_URL}/appointments/payment-history/${user?._id}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      if (response.data.success) {
-        setPaymentHistory(response.data.data);
-      }
-    } catch (error) {
-      console.error("Failed to fetch payment history:", error);
-      // Don't show error toast as this is not critical functionality
-      setPaymentHistory([]);
-    }
-  };
-
-  // Update the useEffect to only fetch payment history when user is available
-  useEffect(() => {
-    if (user?._id) {
-      fetchPaymentHistory();
-    }
-  }, [user?._id]);
+  
 
   const AppointmentCard = ({ appointment, role }) => {
     const isDoctor = role === "doctor";
@@ -1022,27 +746,19 @@ const Dashboard = () => {
     const patient = appointment.patientId || {};
 
     // Get name with proper validation
-    const doctorName = `Dr. ${doctor.firstName || ""} ${
-      doctor.lastName || ""
-    }`.trim();
-    const patientName = `${patient.firstName || ""} ${
-      patient.lastName || ""
-    }`.trim();
+    const doctorName = `Dr. ${doctor.firstName || ""} ${doctor.lastName || ""}`.trim();
+    const patientName = `${patient.firstName || ""} ${patient.lastName || ""}`.trim();
 
     // Get action user name (who cancelled/completed/confirmed the appointment)
     const getActionUserName = () => {
       if (appointment.status === "cancelled") {
         // If cancelled by doctor
         if (appointment.cancelledBy === "doctor") {
-          return `Cancelled by Dr. ${appointment.docId?.firstName || ""} ${
-            appointment.docId?.lastName || ""
-          }`;
+          return `Cancelled by Dr. ${appointment.docId?.firstName || ""} ${appointment.docId?.lastName || ""}`;
         }
         // If cancelled by patient
         else if (appointment.cancelledBy === "patient") {
-          return `Cancelled by ${appointment.patientId?.firstName || ""} ${
-            appointment.patientId?.lastName || ""
-          }`;
+          return `Cancelled by ${appointment.patientId?.firstName || ""} ${appointment.patientId?.lastName || ""}`;
         }
         // If cancelled by system
         else if (appointment.cancelledBy === "system") {
@@ -1054,46 +770,23 @@ const Dashboard = () => {
         }
         // Final fallback
         return "Cancelled";
-      } else if (
-        appointment.status === "completed" &&
-        appointment.completedBy
-      ) {
+      } else if (appointment.status === "completed" && appointment.completedBy) {
         return `Completed by ${doctorName}`;
-      } else if (
-        appointment.status === "confirmed" &&
-        appointment.confirmedBy
-      ) {
-        return `Confirmed by ${
-          appointment.confirmedBy === "doctor" ? doctorName : patientName
-        }`;
+      } else if (appointment.status === "confirmed" && appointment.confirmedBy) {
+        return `Confirmed by ${appointment.confirmedBy === "doctor" ? doctorName : patientName}`;
       }
       return "";
     };
 
     // Get action time with proper validation
     const getActionTime = () => {
-      if (
-        appointment.status === "cancelled" &&
-        (appointment.cancelledAt || appointment.updatedAt)
-      ) {
-        const cancelTime = moment(
-          appointment.cancelledAt || appointment.updatedAt
-        ).fromNow();
+      if (appointment.status === "cancelled" && (appointment.cancelledAt || appointment.updatedAt)) {
+        const cancelTime = moment(appointment.cancelledAt || appointment.updatedAt).fromNow();
         return cancelTime;
-      } else if (
-        appointment.status === "completed" &&
-        (appointment.completedAt || appointment.updatedAt)
-      ) {
-        return moment(
-          appointment.completedAt || appointment.updatedAt
-        ).fromNow();
-      } else if (
-        appointment.status === "confirmed" &&
-        (appointment.confirmedAt || appointment.updatedAt)
-      ) {
-        return moment(
-          appointment.confirmedAt || appointment.updatedAt
-        ).fromNow();
+      } else if (appointment.status === "completed" && (appointment.completedAt || appointment.updatedAt)) {
+        return moment(appointment.completedAt || appointment.updatedAt).fromNow();
+      } else if (appointment.status === "confirmed" && (appointment.confirmedAt || appointment.updatedAt)) {
+        return moment(appointment.confirmedAt || appointment.updatedAt).fromNow();
       }
       return "";
     };
@@ -1101,13 +794,9 @@ const Dashboard = () => {
     // Get profile picture URL
     const getProfilePicture = (user) => {
       if (!user?.profilePicture) {
-        return `https://ui-avatars.com/api/?name=${encodeURIComponent(
-          user?.firstName || ""
-        )} ${encodeURIComponent(user?.lastName || "")}&background=random`;
+        return `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.firstName || "")} ${encodeURIComponent(user?.lastName || "")}&background=random`;
       }
-      return user.profilePicture.startsWith("http")
-        ? user.profilePicture
-        : `http://localhost:5001${user.profilePicture}`;
+      return user.profilePicture.startsWith("http") ? user.profilePicture : `http://localhost:5001${user.profilePicture}`;
     };
 
     const doctorProfilePic = getProfilePicture(doctor);
@@ -1132,9 +821,7 @@ const Dashboard = () => {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className={`bg-white rounded-lg shadow-lg p-4 mb-4 ${
-          appointment.status === "cancelled" ? "opacity-75" : ""
-        }`}
+        className={`bg-white rounded-lg shadow-lg p-4 mb-4 ${appointment.status === "cancelled" ? "opacity-75" : ""}`}
       >
         <div className="flex justify-between items-start">
           <div className="flex items-center space-x-4">
@@ -1145,9 +832,7 @@ const Dashboard = () => {
                 className="w-full h-full object-cover"
                 onError={(e) => {
                   e.target.onerror = null;
-                  e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                    isDoctor ? patientName : doctorName
-                  )}&background=random`;
+                  e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(isDoctor ? patientName : doctorName)}&background=random`;
                 }}
               />
             </div>
@@ -1165,9 +850,7 @@ const Dashboard = () => {
               <div className="flex items-center space-x-3 text-xs text-gray-600 mb-1">
                 <span className="flex items-center">
                   <FaCalendarAlt className="mr-1 text-blue-500" />
-                  {appointment.slotDate
-                    ? moment(appointment.slotDate).format("MMMM D, YYYY")
-                    : "Date not set"}
+                  {appointment.slotDate ? moment(appointment.slotDate).format("MMMM D, YYYY") : "Date not set"}
                 </span>
                 <span className="flex items-center">
                   <FaClock className="mr-1 text-blue-500" />
@@ -1179,24 +862,15 @@ const Dashboard = () => {
                   ) : (
                     <FaUser className="mr-1 text-blue-500" />
                   )}
-                  {appointment.consultationType === "video"
-                    ? "Video Consultation"
-                    : "In-Person Consultation"}
+                  {appointment.consultationType === "video" ? "Video Consultation" : "In-Person Consultation"}
                 </span>
               </div>
 
               <div className="flex items-center mt-1 space-x-3 text-xs text-gray-600">
-                <span
-                  className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
-                    appointment.status
-                  )}`}
-                >
-                  {(appointment.status || "Unknown").charAt(0).toUpperCase() +
-                    (appointment.status || "Unknown").slice(1)}
+                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(appointment.status)}`}>
+                  {(appointment.status || "Unknown").charAt(0).toUpperCase() + (appointment.status || "Unknown").slice(1)}
                 </span>
-                {(appointment.status === "cancelled" ||
-                  appointment.status === "completed" ||
-                  appointment.status === "confirmed") && (
+                {(appointment.status === "cancelled" || appointment.status === "completed" || appointment.status === "confirmed") && (
                   <div className="flex items-center space-x-2">
                     <span className="text-gray-500">{getActionTime()}</span>
                     <span className="text-gray-500">{getActionUserName()}</span>
@@ -1227,9 +901,7 @@ const Dashboard = () => {
                           if (response.data.success) {
                             setAppointments((prevAppointments) =>
                               prevAppointments.map((apt) =>
-                                apt._id === appointment._id
-                                  ? { ...apt, status: "confirmed" }
-                                  : apt
+                                apt._id === appointment._id ? { ...apt, status: "confirmed" } : apt
                               )
                             );
                             fetchAppointments();
@@ -1242,7 +914,7 @@ const Dashboard = () => {
                       }}
                       className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs rounded-md transition-colors flex items-center"
                     >
-                      <FaCheck className=" mr-1 text-xs" />
+                      <FaCheck className="mr-1 text-xs" />
                       <span>Confirm</span>
                     </button>
 
@@ -1276,7 +948,7 @@ const Dashboard = () => {
                       {appointment.status === "confirmed" && !isProcessing && (
                         <button
                           onClick={async () => {
-                            setIsProcessing(true); // 🔄 Show Payment Popup
+                            setIsProcessing(true);
 
                             setTimeout(async () => {
                               try {
@@ -1291,33 +963,67 @@ const Dashboard = () => {
                                     headers: {
                                       Authorization: `Bearer ${token}`,
                                     },
-                                  } // ✅ Brackets sahi kiye
+                                  }
                                 );
 
                                 if (response.data.success) {
+                                  // Create notifications for both doctor and patient
+                                  const doctorNotification = {
+                                    id: Date.now(),
+                                    type: "completed",
+                                    message: `Appointment with ${appointment.patientId.firstName} ${appointment.patientId.lastName} has been completed`,
+                                    timestamp: new Date(),
+                                    appointmentDate: appointment.slotDate,
+                                    recipientType: "doctor",
+                                    recipientId: appointment.docId._id,
+                                  };
+
+                                  const patientNotification = {
+                                    id: Date.now() + 1,
+                                    type: "completed",
+                                    message: `Your appointment with Dr. ${appointment.docId.firstName} ${appointment.docId.lastName} has been completed`,
+                                    timestamp: new Date(),
+                                    appointmentDate: appointment.slotDate,
+                                    recipientType: "patient",
+                                    recipientId: appointment.patientId._id,
+                                  };
+
+                                  // Get existing notifications from localStorage
+                                  const savedNotifications = localStorage.getItem("notifications");
+                                  let updatedNotifications = [];
+                                  
+                                  if (savedNotifications) {
+                                    try {
+                                      updatedNotifications = JSON.parse(savedNotifications);
+                                    } catch (error) {
+                                      console.error("Error parsing saved notifications:", error);
+                                      updatedNotifications = [];
+                                    }
+                                  }
+
+                                  // Add new notifications
+                                  updatedNotifications.unshift(doctorNotification);
+                                  updatedNotifications.unshift(patientNotification);
+
+                                  // Save back to localStorage
+                                  localStorage.setItem("notifications", JSON.stringify(updatedNotifications));
                                   setAppointments((prevAppointments) =>
                                     prevAppointments.map((apt) =>
                                       apt._id === appointment._id
-                                        ? {
-                                            ...apt,
-                                            status: "completed",
-                                            paymentStatus: "paid",
-                                          }
+                                        ? { ...apt, status: "completed", paymentStatus: "paid" }
                                         : apt
                                     )
                                   );
                                   fetchAppointments();
-                                  toast.success(
-                                    "Payment successful! Appointment completed."
-                                  );
+                                  toast.success("Payment successful! Appointment completed.");
                                 }
                               } catch (error) {
                                 console.error("Payment error:", error);
                                 toast.error("Payment failed.");
                               }
 
-                              setIsProcessing(false); // ❌ Hide Popup after Payment
-                            }, 3000); // ⏳ 3 seconds delay for demo
+                              setIsProcessing(false);
+                            }, 3000);
                           }}
                           className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded-md transition-colors flex items-center"
                         >
@@ -1326,19 +1032,24 @@ const Dashboard = () => {
                         </button>
                       )}
 
-                      {/* 🔄 Improved Payment Processing Box (Centered) */}
+                      {/* Payment Processing Box */}
                       {isProcessing && (
-                        <div className="fixed inset-0 flex items-center justify-center">
-                          <div className="bg-white p-5 rounded-lg shadow-md border border-gray-300 w-64 text-center">
-                            <h2 className="text-lg font-semibold text-green-600">
-                              Processing Payment...
-                            </h2>
-                            <div className="mt-3 flex justify-center">
-                              <div className="w-6 h-6 border-4 border-green-500 border-dashed rounded-full animate-spin"></div>
+                        <div className="fixed inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm z-50">
+                          <div className="bg-white p-6 rounded-xl w-80 text-center shadow-lg">
+                            <div className="flex flex-col items-center">
+                              <div className="w-12 h-12 bg-green-50 rounded-full flex items-center justify-center mb-4">
+                                <FaCreditCard className="text-green-500 text-xl" />
+                              </div>
+                              <h2 className="text-lg font-medium text-gray-800 mb-2">Processing Payment</h2>
+                              <div className="w-16 h-16 border-4 border-green-500/20 border-t-green-500 rounded-full animate-spin mb-4"></div>
+                              <div className="space-y-2">
+                                <p className="text-sm text-gray-600">Please wait while we process your payment</p>
+                                <div className="flex items-center justify-center space-x-2 text-xs text-gray-500">
+                                  <FaExternalLinkAlt className="text-gray-400" />
+                                  <span>Demo Payment Mode</span>
+                                </div>
+                              </div>
                             </div>
-                            <p className="text-base text-black mt-2">
-                              This is a demo payment.
-                            </p>
                           </div>
                         </div>
                       )}
@@ -1353,72 +1064,125 @@ const Dashboard = () => {
     );
   };
 
-  const NotificationCard = ({ notification }) => {
-    const getNotificationStyle = (type) => {
-      switch (type) {
-        case "cancelled":
-          return "bg-red-50 border-red-200";
-        case "completed":
-          return "bg-green-50 border-green-200";
-        case "upcoming":
-          return "bg-blue-50 border-blue-200";
-        default:
-          return "bg-gray-50 border-gray-200";
-      }
-    };
-
-    const getNotificationIcon = (type) => {
-      switch (type) {
-        case "cancelled":
-          return <FaTimes className="text-red-500" />;
-        case "completed":
-          return <FaCheckCircle className="text-green-500" />;
-        case "upcoming":
-          return <FaCalendarAlt className="text-blue-500" />;
-        default:
-          return <FaBell className="text-gray-500" />;
-      }
-    };
-
-    const getNotificationMessage = (notification) => {
-      let message = notification.message;
-      if (
-        notification.type === "completed" ||
-        notification.type === "cancelled"
-      ) {
-        message += ` on ${moment(notification.appointmentDate).format(
-          "MMMM D, YYYY"
-        )}`;
-      }
-      return message;
-    };
-
-    return (
-      <div
-        className={`p-4 rounded-lg border ${getNotificationStyle(
-          notification.type
-        )} mb-4 transition-all duration-300 hover:shadow-md`}
-      >
-        <div className="flex items-start space-x-3">
-          <div className="flex-shrink-0 mt-1">
-            {getNotificationIcon(notification.type)}
-          </div>
-          <div className="flex-1">
-            <p className="text-sm text-gray-800">
-              {getNotificationMessage(notification)}
-            </p>
-            <p className="text-xs text-gray-500 mt-1">
-              {moment(notification.timestamp).fromNow()}
-            </p>
-          </div>
-        </div>
-      </div>
-    );
+  // Add handleQuickAction function
+  const handleQuickAction = (action) => {
+    switch (action) {
+      case "view-patients":
+        navigate("/patients");
+        break;
+      case "write-prescription":
+        navigate("/new-prescription");
+        break;
+      case "doctor-prescriptions":
+        navigate("/doctor-prescriptions");
+        break;
+      case "book-appointment":
+        navigate("/appointment");
+        break;
+      case "view-prescriptions":
+        navigate("/prescriptions");
+        break;
+      case "ai-chat":
+        navigate("/aichat");
+        break;
+      default:
+        console.warn("Unknown quick action:", action);
+    }
   };
+
+  // Add filtered appointments logic
+  const filteredAppointments = appointments.filter((appointment) => {
+    // Filter by search query
+    const matchesSearch =
+      searchQuery === "" ||
+      (role === "doctor"
+        ? `${appointment.patientId?.firstName} ${appointment.patientId?.lastName}`
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase())
+        : `Dr. ${appointment.docId?.firstName} ${appointment.docId?.lastName}`
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase()));
+
+    // Filter by status
+    const matchesStatus =
+      filterStatus === "all" || appointment.status === filterStatus;
+
+    // Filter by user role
+    const matchesRole =
+        role === "doctor"
+          ? appointment.docId?._id === user?._id
+        : appointment.patientId?._id === user?._id;
+
+    return matchesSearch && matchesStatus && matchesRole;
+  });
+
+  // Sort appointments
+  const sortedAppointments = [...filteredAppointments].sort((a, b) => {
+    // First sort by status (completed and cancelled last)
+    if (
+      (a.status === "completed" || a.status === "cancelled") &&
+      b.status !== "completed" &&
+      b.status !== "cancelled"
+    )
+      return 1;
+    if (
+      a.status !== "completed" &&
+      a.status !== "cancelled" &&
+      (b.status === "completed" || b.status === "cancelled")
+    )
+      return -1;
+
+    // Then sort by date or name based on sortBy value
+    if (sortBy === "date") {
+      const dateA = new Date(a.slotDate);
+      const dateB = new Date(b.slotDate);
+      if (dateA.getTime() !== dateB.getTime()) {
+        return dateA - dateB;
+      }
+      return a.slotTime.localeCompare(b.slotTime);
+    }
+
+    // Sort by name
+    if (sortBy === "name") {
+      return role === "doctor"
+        ? `${a.patientId?.firstName} ${a.patientId?.lastName}`.localeCompare(
+            `${b.patientId?.firstName} ${b.patientId?.lastName}`
+          )
+        : `Dr. ${a.docId?.firstName} ${a.docId?.lastName}`.localeCompare(
+            `Dr. ${b.docId?.firstName} ${b.docId?.lastName}`
+          );
+    }
+    return 0;
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-custom-light-blue via-custom-light-teal to-custom-light-cyan p-6">
-      <Toaster />
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: '#fff',
+            color: '#363636',
+            borderRadius: '8px',
+            padding: '12px 24px',
+            fontSize: '14px',
+            fontWeight: '500',
+          },
+          success: {
+            style: {
+              background: '#22C55E',
+              color: '#fff',
+            },
+          },
+          error: {
+            style: {
+              background: '#EF4444',
+              color: '#fff',
+            },
+          }
+        }}
+      />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header Section */}
         <div className="mb-8">
@@ -1578,7 +1342,7 @@ const Dashboard = () => {
           )}
 
           {/* Appointments Section */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-3">
             <div className="bg-white rounded-lg shadow-md p-6">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
                 <h2 className="text-2xl font-bold text-gray-900 mb-4 md:mb-0">
@@ -1642,38 +1406,6 @@ const Dashboard = () => {
                       key={appointment._id}
                       appointment={appointment}
                       role={role}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Right Column - Different for doctors and patients */}
-          <div className="lg:col-span-1">
-            {/* Notifications Section */}
-            <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">
-                  Notifications
-                </h2>
-                <div
-                  className={`relative ${getNotificationBadgeColor()} rounded-full h-6 w-6 flex items-center justify-center text-white text-xs`}
-                >
-                  {notifications.length}
-                </div>
-              </div>
-              {notifications.length === 0 ? (
-                <div className="text-center py-8">
-                  <p className="text-gray-500 mb-4">No new notifications</p>
-                  <FaBell className="text-gray-400 text-4xl mx-auto" />
-                </div>
-              ) : (
-                <div className="space-y-4 max-h-[300px] overflow-y-auto scrollbar-hide">
-                  {notifications.map((notification) => (
-                    <NotificationCard
-                      key={notification.id}
-                      notification={notification}
                     />
                   ))}
                 </div>

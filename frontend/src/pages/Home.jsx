@@ -14,28 +14,35 @@ const Home = () => {
   useEffect(() => {
     const fetchDoctors = async () => {
       try {
-        console.log('Starting to fetch doctors in Home component...');
         const response = await apiService.getDoctors();
-        console.log('Received response in Home:', response);
         
         if (response && response.success) {
           const doctorsData = response.data || [];
-          console.log('Setting doctors data in state:', doctorsData);
           setDoctors(doctorsData);
         } else {
-          console.error('Invalid response format:', response);
           setDoctors([]);
-          toast.error("Failed to load doctors list. Please try again later.");
+          toast.error("Failed to load doctors list. Please try again later.", {
+            style: {
+              background: '#EF4444',
+              color: '#FFFFFF',
+              borderRadius: '8px',
+              padding: '12px 24px',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+            }
+          });
         }
         setLoading(false);
       } catch (error) {
-        console.error("Error in Home component:", {
-          message: error.message,
-          response: error.response?.data,
-          status: error.response?.status
-        });
         setDoctors([]);
-        toast.error(`Error: ${error.message || "An error occurred while fetching doctors list."}`);
+        toast.error(`Error: ${error.message || "An error occurred while fetching doctors list."}`, {
+          style: {
+            background: '#EF4444',
+            color: '#FFFFFF',
+            borderRadius: '8px',
+            padding: '12px 24px',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+          }
+        });
         setLoading(false);
       }
     };

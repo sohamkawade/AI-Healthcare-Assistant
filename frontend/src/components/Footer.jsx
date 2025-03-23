@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { FaFacebookF, FaTwitter, FaLinkedinIn, FaPhone, FaEnvelope, FaMapMarkerAlt } from 'react-icons/fa';
 import { AiOutlineInstagram } from 'react-icons/ai';
 import axios from 'axios';
-import { toast } from 'react-toastify';
+import { toast } from 'react-hot-toast';
 
 const socialLinks = [
   { path: 'https://facebook.com', icon: <FaFacebookF className='group-hover:text-purple-600 w-5 h-5' /> },
@@ -25,26 +25,81 @@ const Footer = () => {
 
   const handleSubscribe = async (e) => {
     e.preventDefault();
+    
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email) {
-      toast.error('Please enter your email address');
+      toast.error('Please enter your email address', {
+        style: {
+          background: '#EF4444',
+          color: '#FFFFFF',
+          borderRadius: '8px',
+          padding: '12px 24px',
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+        }
+      });
+      return;
+    }
+
+    if (!emailRegex.test(email)) {
+      toast.error('Please enter a valid email address', {
+        style: {
+          background: '#EF4444',
+          color: '#FFFFFF',
+          borderRadius: '8px',
+          padding: '12px 24px',
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+        }
+      });
       return;
     }
 
     try {
       setLoading(true);
       const response = await axios.post('http://localhost:5001/api/subscribers/subscribe', {
-        email: email
+        email: email.trim()
+      }, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
 
       if (response.data.success) {
-        toast.success('Thank you for subscribing to our newsletter!', {theme:'colored'});
+        toast.success('Thank you for subscribing to our newsletter!', {
+          style: {
+            background: '#22C55E',
+            color: '#FFFFFF',
+            borderRadius: '8px',
+            padding: '12px 24px',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+            border: '2px solid #22C55E',
+            fontWeight: 'bold'
+          },
+          duration: 3000
+        });
         setEmail('');
       } else {
-        toast.error(response.data.message || 'Failed to subscribe. Please try again.');
+        toast.error(response.data.message || 'Failed to subscribe. Please try again.', {
+          style: {
+            background: '#EF4444',
+            color: '#FFFFFF',
+            borderRadius: '8px',
+            padding: '12px 24px',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+          }
+        });
       }
     } catch (error) {
-      console.error('Subscription error:', error);
-      toast.error(error.response?.data?.message || 'Failed to subscribe. Please try again later.');
+      const errorMessage = error.response?.data?.message || 'Failed to subscribe. Please try again later.';
+      toast.error(errorMessage, {
+        style: {
+          background: '#EF4444',
+          color: '#FFFFFF',
+          borderRadius: '8px',
+          padding: '12px 24px',
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+        }
+      });
     } finally {
       setLoading(false);
     }

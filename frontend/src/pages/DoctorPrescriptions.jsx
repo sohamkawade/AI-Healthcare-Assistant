@@ -44,7 +44,15 @@ const DoctorPrescriptions = () => {
           setPrescriptions([]);
         }
       } catch (error) {
-        toast.error('Failed to fetch prescriptions');
+        toast.error('Failed to fetch prescriptions', {
+          style: {
+            background: '#EF4444',
+            color: '#FFFFFF',
+            borderRadius: '8px',
+            padding: '12px 24px',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+          }
+        });
       } finally {
         setLoading(false);
       }
@@ -72,9 +80,25 @@ const DoctorPrescriptions = () => {
       document.body.appendChild(link);
       link.click();
       link.remove();
-      toast.success('Prescription downloaded successfully');
+      toast.success('Prescription downloaded successfully', {
+        style: {
+          background: '#22C55E',
+          color: '#FFFFFF',
+          borderRadius: '8px',
+          padding: '12px 24px',
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+        }
+      });
     } catch (error) {
-      toast.error('Failed to download prescription');
+      toast.error('Failed to download prescription', {
+        style: {
+          background: '#EF4444',
+          color: '#FFFFFF',
+          borderRadius: '8px',
+          padding: '12px 24px',
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+        }
+      });
     }
   };
 
@@ -95,10 +119,26 @@ const DoctorPrescriptions = () => {
 
       if (response.data.success) {
         setPrescriptions(prescriptions.filter(p => p._id !== prescriptionId));
-        toast.success('Prescription deleted successfully');
+        toast.success('Prescription deleted successfully', {
+          style: {
+            background: '#22C55E',
+            color: '#FFFFFF',
+            borderRadius: '8px',
+            padding: '12px 24px',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+          }
+        });
       }
     } catch (error) {
-      toast.error('Failed to delete prescription');
+      toast.error('Failed to delete prescription', {
+        style: {
+          background: '#EF4444',
+          color: '#FFFFFF',
+          borderRadius: '8px',
+          padding: '12px 24px',
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+        }
+      });
     }
   };
 

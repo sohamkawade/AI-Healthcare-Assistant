@@ -166,12 +166,11 @@ const DoctorSignup = () => {
 
       if (response.data.success) {
         toast.success("Registration successful! You can now log in.", {
-          theme: "colored",
-          duration: 3000,
-          position: "top-right",
           style: {
-            background: "#4CAF50",
+            background: "#166534",
             color: "#fff",
+            border: "2px solid #166534",
+            fontWeight: "bold"
           },
         });
         setDoctorData(response.data);
@@ -194,24 +193,22 @@ const DoctorSignup = () => {
         toast.error(
           "This email is already registered. Please try logging in or use a different email.",
           {
-            theme: "colored",
-            duration: 5000,
-            position: "top-right",
             style: {
-              background: "#f44336",
+              background: "#DC2626",
               color: "#fff",
+              border: "2px solid #DC2626",
+              fontWeight: "bold"
             },
           }
         );
         navigate("/login");
       } else {
         toast.error(errorMessage, {
-          theme: "colored",
-          duration: 3000,
-          position: "top-right",
           style: {
-            background: "#f44336",
+            background: "#DC2626",
             color: "#fff",
+            border: "2px solid #DC2626",
+            fontWeight: "bold"
           },
         });
       }

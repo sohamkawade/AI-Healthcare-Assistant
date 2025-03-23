@@ -7,7 +7,10 @@ const path = require('path');
 // Get prescriptions for a doctor
 exports.getDoctorPrescriptions = async (req, res) => {
   try {
-    const query = { doctorId: req.user._id };
+    const query = { 
+      doctorId: req.user._id,
+      'deletedBy.doctor': false // Only get prescriptions not deleted by doctor
+    };
     
     const prescriptions = await Prescription.find(query)
       .populate('patientId', 'firstName lastName email')
@@ -42,7 +45,12 @@ exports.getDoctorPrescriptions = async (req, res) => {
 // Get prescriptions for a patient
 exports.getPatientPrescriptions = async (req, res) => {
   try {
-    const prescriptions = await Prescription.find({ patientId: req.params.patientId })
+    const query = { 
+      patientId: req.params.patientId,
+      'deletedBy.patient': false // Only get prescriptions not deleted by patient
+    };
+    
+    const prescriptions = await Prescription.find(query)
       .populate('doctorId', 'firstName lastName specialization')
       .sort({ createdAt: -1 });
 
@@ -243,23 +251,23 @@ exports.deletePrescription = async (req, res) => {
 
     // Check if the doctor is deleting the prescription
     if (prescription.doctorId.toString() === req.user._id.toString()) {
-      // Doctor deletes the prescription, so remove only doctor reference
-      prescription.doctorId = null; // Unset doctorId reference
-      await prescription.save(); // Save the updated prescription without the doctor's ID
+      // Mark prescription as deleted by doctor
+      prescription.deletedBy.doctor = true;
+      await prescription.save();
       return res.json({
         success: true,
-        message: 'Prescription removed from doctor\'s page'
+        message: 'Prescription removed from doctor\'s view'
       });
     }
 
     // Check if the patient is deleting the prescription
     if (prescription.patientId.toString() === req.user._id.toString()) {
-      // Patient deletes the prescription, so remove only patient reference
-      prescription.patientId = null; // Unset patientId reference
-      await prescription.save(); // Save the updated prescription without the patient's ID
+      // Mark prescription as deleted by patient
+      prescription.deletedBy.patient = true;
+      await prescription.save();
       return res.json({
         success: true,
-        message: 'Prescription removed from patient\'s page'
+        message: 'Prescription removed from patient\'s view'
       });
     }
 
