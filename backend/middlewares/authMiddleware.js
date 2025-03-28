@@ -7,6 +7,7 @@ const authenticate = async (req, res, next) => {
     const token = req.header('Authorization')?.replace('Bearer ', '');
     
     if (!token) {
+      console.log('No token provided');
       return res.status(401).json({
         success: false,
         message: 'No authentication token, access denied'
@@ -29,19 +30,24 @@ const authenticate = async (req, res, next) => {
       });
     }
 
+    // Set the complete user object in the request
     req.user = {
       _id: user._id,
       email: user.email,
       role: decoded.role,
-      specialization: user.specialization || null
+      specialization: user.specialization || null,
+      firstName: user.firstName,
+      lastName: user.lastName
     };
 
     next();
   } catch (error) {
     console.error('Auth middleware error:', error);
+    console.error('Error stack:', error.stack);
     res.status(401).json({
       success: false,
-      message: 'Token is invalid or expired'
+      message: 'Token is invalid or expired',
+      error: error.message
     });
   }
 };

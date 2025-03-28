@@ -215,7 +215,7 @@ const Contact = () => {
 
       if (response.data.success) {
         toast.success('Message sent successfully!', {
-          duration: 3000,
+          duration: 2000,
           position: 'top-right',
           style: {
             background: '#22C55E',

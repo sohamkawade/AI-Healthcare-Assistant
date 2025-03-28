@@ -4,33 +4,43 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import apiService from "../services/apiService";
 import { useAuth } from "../hooks/useAuth";
-import { FaCheck, FaTimes, FaCheckCircle, FaTimesCircle, FaCalendarAlt, FaClock, FaVideo, FaUser, FaStar } from 'react-icons/fa';
-import moment from 'moment';
+import {
+  FaCheck,
+  FaTimes,
+  FaCheckCircle,
+  FaTimesCircle,
+  FaCalendarAlt,
+  FaClock,
+  FaVideo,
+  FaUser,
+  FaStar,
+} from "react-icons/fa";
+import moment from "moment";
 
 // Single toast configuration object
 const toastConfig = {
   duration: 3000,
   position: "top-right",
   style: {
-    background: '#fff',
-    color: '#363636',
-    borderRadius: '8px',
-    padding: '12px 24px',
-    fontSize: '14px',
-    fontWeight: '500',
+    background: "#fff",
+    color: "#363636",
+    borderRadius: "8px",
+    padding: "12px 24px",
+    fontSize: "14px",
+    fontWeight: "500",
   },
   success: {
     style: {
-      background: '#22C55E',
-      color: '#fff',
+      background: "#22C55E",
+      color: "#fff",
     },
   },
   error: {
     style: {
-      background: '#EF4444',
-      color: '#fff',
+      background: "#EF4444",
+      color: "#fff",
     },
-  }
+  },
 };
 
 const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -45,7 +55,7 @@ const Appointment = () => {
   const [loading, setLoading] = useState(false);
   const [doctorStatus, setDoctorStatus] = useState({});
   const [selectedDate, setSelectedDate] = useState(null);
-  const [consultationType, setConsultationType] = useState('in-person');
+  const [consultationType, setConsultationType] = useState("in-person");
   const { user, userType } = useAuth();
   const [showPayment, setShowPayment] = useState(false);
   const [currentAppointment, setCurrentAppointment] = useState(null);
@@ -57,29 +67,46 @@ const Appointment = () => {
       const userType = localStorage.getItem("userType");
 
       if (!token || !userId) {
-        toast.error("Please log in to access the appointment page.", toastConfig);
+        toast.error(
+          "Please log in to access the appointment page.",
+          {
+            duration: 2000,
+            position: 'top-right',
+            style: {
+              background: '#EF4444',
+              color: '#fff',
+              borderRadius: '8px',
+              padding: '12px 24px',
+              fontSize: '14px',
+              fontWeight: '500',
+            },
+          }
+        );
         navigate("/login");
         return;
       }
 
       // Check if user is a patient by checking if they have a specialization
       // If user has specialization, they are a doctor, otherwise they are a patient
-      const decodedToken = JSON.parse(atob(token.split('.')[1]));
+      const decodedToken = JSON.parse(atob(token.split(".")[1]));
       const isPatient = !decodedToken.specialization;
 
       if (!isPatient) {
-        toast("Only patients can book appointments. Please login with a patient profile.", {
-          duration: 2000,
-          position: 'top-right',
-          style: {
-            background: '#F97316',
-            color: '#fff',
-            borderRadius: '8px',
-            padding: '12px 24px',
-            fontSize: '14px',
-            fontWeight: '500',
-          },
-        });
+        toast(
+          "Only patients can book appointments. Please login with a patient profile.",
+          {
+            duration: 2000,
+            position: "top-right",
+            style: {
+              background: "#F97316",
+              color: "#fff",
+              borderRadius: "8px",
+              padding: "12px 24px",
+              fontSize: "14px",
+              fontWeight: "500",
+            },
+          }
+        );
         setTimeout(() => {
           navigate("/dashboard");
         }, 2000);
@@ -96,22 +123,54 @@ const Appointment = () => {
   const fetchDoctors = async () => {
     try {
       setLoading(true);
-      const response = await axios.get("http://localhost:5001/api/auth/doctors");
-      
+      const response = await axios.get(
+        "http://localhost:5001/api/auth/doctors"
+      );
+
       if (response.data && response.data.success) {
         setDoctors(response.data.data);
       } else {
         setDoctors([]);
         console.error("Invalid response format:", response);
-        toast.error("Failed to load doctors list. Please try again later.", toastConfig);
+        toast.error(
+          "Failed to load doctors list. Please try again later.",
+          {
+            duration: 2000,
+            position: 'top-right',
+            style: {
+              background: '#EF4444',
+              color: '#fff',
+              borderRadius: '8px',
+              padding: '12px 24px',
+              fontSize: '14px',
+              fontWeight: '500',
+            },
+          }
+        );
       }
     } catch (error) {
       console.error("Error fetching doctors:", {
         message: error.message,
         response: error.response?.data,
-        status: error.response?.status
+        status: error.response?.status,
       });
-      toast.error(`Error: ${error.message || "An error occurred while fetching doctors list."}`, toastConfig);
+      toast.error(
+        `Error: ${
+          error.message || "An error occurred while fetching doctors list."
+        }`,
+        {
+          duration: 2000,
+          position: 'top-right',
+          style: {
+            background: '#EF4444',
+            color: '#fff',
+            borderRadius: '8px',
+            padding: '12px 24px',
+            fontSize: '14px',
+            fontWeight: '500',
+          },
+        }
+      );
     } finally {
       setLoading(false);
     }
@@ -151,8 +210,7 @@ const Appointment = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
-      
-      
+
       const response = await axios.get(
         `http://localhost:5001/api/appointments/available-slots?docId=${docId}&date=${date}`,
         {
@@ -160,36 +218,48 @@ const Appointment = () => {
         }
       );
 
-
       if (response.data.success) {
         const slots = response.data.data;
-        console.log('Received slots:', slots);
+        console.log("Received slots:", slots);
 
-        setAvailableSlots(prev => ({
+        setAvailableSlots((prev) => ({
           ...prev,
           [docId]: {
             ...prev?.[docId],
-            [date]: slots
-          }
+            [date]: slots,
+          },
         }));
 
-        setDoctorStatus(prev => ({
+        setDoctorStatus((prev) => ({
           ...prev,
           [docId]: {
             ...prev?.[docId],
-            hasAvailableSlots: slots.length > 0
-          }
+            hasAvailableSlots: slots.length > 0,
+          },
         }));
       }
     } catch (error) {
       console.error("Error fetching available slots:", error);
-      toast.error("Failed to fetch available slots", toastConfig);
-      setAvailableSlots(prev => ({
+      toast.error("Failed to fetch available slots", 
+        {
+          duration: 2000,
+          position: 'top-right',
+          style: {
+            background: '#EF4444',
+            color: '#fff',
+            borderRadius: '8px',
+            padding: '12px 24px',
+            fontSize: '14px',
+            fontWeight: '500',
+          },
+        }
+      );
+      setAvailableSlots((prev) => ({
         ...prev,
         [docId]: {
           ...prev?.[docId],
-          [date]: []
-        }
+          [date]: [],
+        },
       }));
     } finally {
       setLoading(false);
@@ -202,19 +272,43 @@ const Appointment = () => {
 
   const handleBookAppointment = async () => {
     if (!slotTime || !selectedDoctor || !selectedDate) {
-      toast.error("Please select all required fields", toastConfig);
+      toast.error("Please select all required fields", 
+        {
+          duration: 2000,
+          position: 'top-right',
+          style: {
+            background: '#EF4444',
+            color: '#fff',
+            borderRadius: '8px',
+            padding: '12px 24px',
+            fontSize: '14px',
+            fontWeight: '500',
+          },
+        }
+      );
       return;
     }
 
     if (!consultationType) {
-      toast.error("Please select a consultation type", toastConfig);
+      toast.error("Please select a consultation type", {
+        duration: 2000,
+        position: 'top-right',
+        style: {
+          background: '#EF4444',
+          color: '#fff',
+          borderRadius: '8px',
+          padding: '12px 24px',
+          fontSize: '14px',
+          fontWeight: '500',
+        },
+      });
       return;
     }
 
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
-      
+
       // Check daily appointment limit
       const dailyCountResponse = await axios.get(
         `http://localhost:5001/api/appointments/patient/${user._id}/daily-count?date=${selectedDate}`,
@@ -224,65 +318,116 @@ const Appointment = () => {
       );
 
       if (dailyCountResponse.data.count >= 2) {
-        toast.error("You can only book 2 appointments per day", toastConfig);
+        toast.error("You can only book 2 appointments per day", 
+          {
+            duration: 2000,
+            position: 'top-right',
+            style: {
+              background: '#EF4444',
+              color: '#fff',
+              borderRadius: '8px',
+              padding: '12px 24px',
+              fontSize: '14px',
+              fontWeight: '500',
+            },
+          }
+        );
         setLoading(false);
         return;
       }
 
       // Check if patient already has an appointment at this time slot
-      const timeSlotCheckResponse = await axios.get(
-        `http://localhost:5001/api/appointments/check-timeslot`,
-        {
+      const timeSlotCheckResponse = await axios
+        .get(`http://localhost:5001/api/appointments/check-timeslot`, {
           params: {
             patientId: user._id,
             date: selectedDate,
-            time: slotTime
+            time: slotTime,
           },
-          headers: { 
+          headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json'
+            "Content-Type": "application/json",
           },
-        }
-      ).catch(error => {
-        console.error('Time slot check error:', error.response?.data || error.message);
-        throw error;
-      });
-
+        })
+        .catch((error) => {
+          console.error(
+            "Time slot check error:",
+            error.response?.data || error.message
+          );
+          throw error;
+        });
 
       if (timeSlotCheckResponse.data.hasAppointment) {
-        toast.error(timeSlotCheckResponse.data.message, toastConfig);
+        toast.error(timeSlotCheckResponse.data.message, 
+          {
+            duration: 2000,
+            position: 'top-right',
+            style: {
+              background: '#EF4444',
+              color: '#fff',
+              borderRadius: '8px',
+              padding: '12px 24px',
+              fontSize: '14px',
+              fontWeight: '500',
+            },
+          }
+        );
         setLoading(false);
         return;
       }
-      
+
       // Proceed with booking
       const appointmentData = {
         docId: selectedDoctor._id,
         slotDate: selectedDate,
         slotTime: slotTime,
-        consultationType: consultationType
+        consultationType: consultationType,
       };
-
 
       const bookResponse = await axios.post(
         "http://localhost:5001/api/appointments/book",
         appointmentData,
         {
-          headers: { 
+          headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json'
+            "Content-Type": "application/json",
           },
         }
       );
 
       if (bookResponse.data.success) {
-        toast.success("Appointment booked successfully!", toastConfig);
+        toast.success("Appointment booked successfully!", {
+          duration: 2000,
+          position: "top-right",
+          style: {
+            background: "#22C55E",
+            color: "#fff",
+            borderRadius: "8px",
+            padding: "12px 24px",
+            fontSize: "14px",
+            fontWeight: "500",
+          },
+        });
         navigate("/dashboard");
       }
     } catch (error) {
       console.error("Error booking appointment:", error);
-      const errorMessage = error.response?.data?.message || "Failed to book appointment";
-      toast.error(errorMessage, toastConfig);
+      const errorMessage =
+        error.response?.data?.message || "Failed to book appointment";
+      toast.error(errorMessage, 
+        {
+          duration: 2000,
+          position: 'top-right',
+          style: {
+            background: '#EF4444',
+            color: '#fff',
+            borderRadius: '8px',
+            padding: '12px 24px',
+            fontSize: '14px',
+            fontWeight: '500',
+          },
+        }
+      );
     } finally {
       setLoading(false);
     }
@@ -291,10 +436,36 @@ const Appointment = () => {
   const handlePaymentComplete = async () => {
     try {
       setShowPayment(false);
-      toast.success('Payment completed successfully!', toastConfig);
-      navigate('/dashboard');
+      toast.success("Payment completed successfully!", 
+        {
+          duration: 2000,
+          position: 'top-right',
+          style: {
+            background: '#22C55E',
+            color: '#fff',
+            borderRadius: '8px',
+            padding: '12px 24px',
+            fontSize: '14px',
+            fontWeight: '500',
+          },
+        }
+      );
+      navigate("/dashboard");
     } catch (error) {
-      toast.error('Failed to process payment', toastConfig);
+      toast.error("Failed to process payment", 
+        {
+          duration: 2000,
+          position: 'top-right',
+          style: {
+            background: '#EF4444',
+            color: '#fff',
+            borderRadius: '8px',
+            padding: '12px 24px',
+            fontSize: '14px',
+            fontWeight: '500',
+          },
+        }
+      );
     }
   };
 
@@ -302,7 +473,20 @@ const Appointment = () => {
     try {
       const appointment = appointments.find((apt) => apt._id === appointmentId);
       if (!appointment) {
-        toast.error("Appointment not found", toastConfig);
+        toast.error("Appointment not found", 
+          {
+            duration: 2000,
+            position: 'top-right',
+            style: {
+              background: '#EF4444',
+              color: '#fff',
+              borderRadius: '8px',
+              padding: '12px 24px',
+              fontSize: '14px',
+              fontWeight: '500',
+            },
+          }
+        );
         return;
       }
 
@@ -310,7 +494,20 @@ const Appointment = () => {
       const appointmentTime = new Date(appointment.startTime);
       const now = new Date();
       if (appointmentTime < now) {
-        toast.error("Cannot cancel past appointments", toastConfig);
+        toast.error("Cannot cancel past appointments", 
+          {
+            duration: 2000,
+            position: 'top-right',
+            style: {
+              background: '#EF4444',
+              color: '#fff',
+              borderRadius: '8px',
+              padding: '12px 24px',
+              fontSize: '14px',
+              fontWeight: '500',
+            },
+          }
+        );
         return;
       }
 
@@ -318,21 +515,37 @@ const Appointment = () => {
       const hoursUntilAppointment = timeUntilAppointment / (1000 * 60 * 60);
 
       if (hoursUntilAppointment < 1) {
-        toast.error("Cannot cancel appointments less than 1 hour before the scheduled time", toastConfig);
+        toast.error(
+          "Cannot cancel appointments less than 1 hour before the scheduled time",
+          {
+            duration: 3000,
+            position: 'top-right',
+            style: {
+              background: '#EF4444',
+              color: '#fff',
+              borderRadius: '8px',
+              padding: '12px 24px',
+              fontSize: '14px',
+              fontWeight: '500',
+            },
+          }
+        );
         return;
       }
 
-      if (!window.confirm("Are you sure you want to cancel this appointment?")) {
+      if (
+        !window.confirm("Are you sure you want to cancel this appointment?")
+      ) {
         return;
       }
 
       const token = localStorage.getItem("token");
       const response = await axios.post(
         `http://localhost:5001/api/appointments/cancel/${appointmentId}`,
-        { 
+        {
           reason: "Cancelled by user",
           cancelledBy: userType,
-          cancelledById: user._id
+          cancelledById: user._id,
         },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -346,9 +559,10 @@ const Appointment = () => {
         );
 
         // Create notification for both doctor and patient
-        const cancelledBy = userType === "doctor" 
-          ? `Dr. ${user.firstName} ${user.lastName}`
-          : `${user.firstName} ${user.lastName}`;
+        const cancelledBy =
+          userType === "doctor"
+            ? `Dr. ${user.firstName} ${user.lastName}`
+            : `${user.firstName} ${user.lastName}`;
 
         const doctorNotification = {
           id: Date.now() + 1,
@@ -356,7 +570,7 @@ const Appointment = () => {
           message: `Appointment with ${appointment.patientId.firstName} ${appointment.patientId.lastName} has been cancelled by ${cancelledBy}`,
           timestamp: new Date(),
           appointmentDate: appointment.startTime,
-          recipientId: appointment.docId._id
+          recipientId: appointment.docId._id,
         };
 
         const patientNotification = {
@@ -365,28 +579,60 @@ const Appointment = () => {
           message: `Appointment with Dr. ${appointment.docId.firstName} ${appointment.docId.lastName} has been cancelled by ${cancelledBy}`,
           timestamp: new Date(),
           appointmentDate: appointment.startTime,
-          recipientId: appointment.patientId._id
+          recipientId: appointment.patientId._id,
         };
 
         // Update notifications in state and localStorage
         const updatedNotifications = [...notifications];
-        
+
         // Add notification based on current user's role
         if (userType === "doctor" && user._id === appointment.docId._id) {
           updatedNotifications.unshift(doctorNotification);
-        } else if (userType === "patient" && user._id === appointment.patientId._id) {
+        } else if (
+          userType === "patient" &&
+          user._id === appointment.patientId._id
+        ) {
           updatedNotifications.unshift(patientNotification);
         }
 
         // Store notifications in localStorage
-        localStorage.setItem('notifications', JSON.stringify(updatedNotifications));
+        localStorage.setItem(
+          "notifications",
+          JSON.stringify(updatedNotifications)
+        );
         setNotifications(updatedNotifications);
-        
-        toast.success("Appointment cancelled successfully", toastConfig);
+
+        toast.success("Appointment cancelled successfully", {
+          duration: 2000,
+          position: 'top-right',
+          style: {
+            background: '#22C55E',
+            color: '#fff',
+            borderRadius: '8px',
+            padding: '12px 24px',
+            fontSize: '14px',
+            fontWeight: '500',
+          },
+        });
       }
     } catch (error) {
       console.error("Error cancelling appointment:", error);
-      toast.error(error.response?.data?.message || "Failed to cancel appointment. Please try again.", toastConfig);
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to cancel appointment. Please try again.",
+          {
+            duration: 2000,
+            position: 'top-right',
+            style: {
+              background: '#EF4444',
+              color: '#fff',
+              borderRadius: '8px',
+              padding: '12px 24px',
+              fontSize: '14px',
+              fontWeight: '500',
+            },
+          }
+      );
     }
   };
 
@@ -394,7 +640,20 @@ const Appointment = () => {
     try {
       const appointment = appointments.find((apt) => apt._id === appointmentId);
       if (!appointment) {
-        toast.error("Appointment not found", toastConfig);
+        toast.error("Appointment not found", 
+          {
+            duration: 2000,
+            position: 'top-right',
+            style: {
+              background: '#EF4444',
+              color: '#fff',
+              borderRadius: '8px',
+              padding: '12px 24px',
+              fontSize: '14px',
+              fontWeight: '500',
+            },
+          }
+        );
         return;
       }
 
@@ -405,25 +664,57 @@ const Appointment = () => {
       const minutesDifference = Math.floor(timeDifference / (1000 * 60));
 
       if (minutesDifference < 0) {
-        toast.error("Cannot complete an appointment before it starts", toastConfig);
+        toast.error(
+          "Cannot complete an appointment before it starts",
+          {
+            duration: 2000,
+            position: 'top-right',
+            style: {
+              background: '#EF4444',
+              color: '#fff',
+              borderRadius: '8px',
+              padding: '12px 24px',
+              fontSize: '14px',
+              fontWeight: '500',
+            },
+          }
+        );
         return;
       }
 
       if (minutesDifference > 15) {
-        toast.error("Cannot complete an appointment more than 15 minutes after the scheduled time", toastConfig);
+        toast.error(
+          "Cannot complete an appointment more than 15 minutes after the scheduled time",
+          {
+            duration: 2000,
+            position: 'top-right',
+            style: {
+              background: '#EF4444',
+              color: '#fff',
+              borderRadius: '8px',
+              padding: '12px 24px',
+              fontSize: '14px',
+              fontWeight: '500',
+            },
+          }
+        );
         return;
       }
 
-      if (!window.confirm("Are you sure you want to mark this appointment as completed?")) {
+      if (
+        !window.confirm(
+          "Are you sure you want to mark this appointment as completed?"
+        )
+      ) {
         return;
       }
 
       const token = localStorage.getItem("token");
       const response = await axios.post(
         `http://localhost:5001/api/appointments/complete/${appointmentId}`,
-        { 
+        {
           completedAt: new Date().toISOString(),
-          completedBy: userType
+          completedBy: userType,
         },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -434,9 +725,7 @@ const Appointment = () => {
         // Update appointments list
         setAppointments((prev) =>
           prev.map((apt) =>
-            apt._id === appointmentId
-              ? { ...apt, status: "completed" }
-              : apt
+            apt._id === appointmentId ? { ...apt, status: "completed" } : apt
           )
         );
 
@@ -450,20 +739,51 @@ const Appointment = () => {
               : `Appointment with Dr. ${appointment.docId.firstName} ${appointment.docId.lastName} has been completed by ${user.firstName} ${user.lastName}`,
           timestamp: new Date(),
           appointmentDate: appointment.startTime,
-          recipientId: appointment.docId._id
+          recipientId: appointment.docId._id,
         };
 
         // Update notifications in state and localStorage
         const updatedNotifications = [...notifications];
         updatedNotifications.unshift(newNotification);
-        localStorage.setItem('notifications', JSON.stringify(updatedNotifications));
+        localStorage.setItem(
+          "notifications",
+          JSON.stringify(updatedNotifications)
+        );
         setNotifications(updatedNotifications);
-        
-        toast.success("Appointment completed successfully", toastConfig);
+
+        toast.success("Appointment completed successfully", 
+          {
+            duration: 2000,
+            position: 'top-right',
+            style: {
+              background: '#22C55E',
+              color: '#fff',
+              borderRadius: '8px',
+              padding: '12px 24px',
+              fontSize: '14px',
+              fontWeight: '500',
+            },
+          }
+        );
       }
     } catch (error) {
       console.error("Error completing appointment:", error);
-      toast.error(error.response?.data?.message || "Failed to complete appointment. Please try again.", toastConfig);
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to complete appointment. Please try again.",
+          {
+            duration: 2000,
+            position: 'top-right',
+            style: {
+              background: '#EF4444',
+              color: '#fff',
+              borderRadius: '8px',
+              padding: '12px 24px',
+              fontSize: '14px',
+              fontWeight: '500',
+            },
+          }
+      );
     }
   };
 
@@ -472,27 +792,47 @@ const Appointment = () => {
       <Toaster
         position="top-right"
         toastOptions={{
-          duration: 3000,
+          duration: 4000,
           style: {
-            background: '#fff',
-            color: '#363636',
-            borderRadius: '8px',
-            padding: '12px 24px',
-            fontSize: '14px',
-            fontWeight: '500',
+            background: "#fff",
+            color: "#363636",
+            borderRadius: "8px",
+            padding: "12px 24px",
+            fontSize: "14px",
+            fontWeight: "500",
+            boxShadow:
+              "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
           },
           success: {
             style: {
-              background: '#22C55E',
-              color: '#fff',
+              background: "#22C55E",
+              color: "#fff",
+            },
+            iconTheme: {
+              primary: "#fff",
+              secondary: "#22C55E",
             },
           },
           error: {
             style: {
-              background: '#EF4444',
-              color: '#fff',
+              background: "#EF4444",
+              color: "#fff",
             },
-          }
+            iconTheme: {
+              primary: "#fff",
+              secondary: "#EF4444",
+            },
+          },
+          warning: {
+            style: {
+              background: "#F97316",
+              color: "#fff",
+            },
+            iconTheme: {
+              primary: "#fff",
+              secondary: "#F97316",
+            },
+          },
         }}
       />
       <div className="p-6 max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -503,13 +843,14 @@ const Appointment = () => {
               <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                 {doctors.map((doctor) => {
                   const isSelected = selectedDoctor?._id === doctor._id;
-                  
+
                   // Check availability based on actual available slots
                   let isAvailable = true; // Default available for unselected doctors
-                  
+
                   if (isSelected && selectedDate) {
                     // Check if there are any available slots for this doctor on the selected date
-                    const doctorSlots = availableSlots[doctor._id]?.[selectedDate] || [];
+                    const doctorSlots =
+                      availableSlots[doctor._id]?.[selectedDate] || [];
                     isAvailable = doctorSlots.length > 0;
                   }
 
@@ -542,7 +883,11 @@ const Appointment = () => {
                         )}
                       </div>
                       <div className="mt-4 text-center">
-                        <span className={`font-bold ${isAvailable ? "text-green-500" : "text-red-500"}`}>
+                        <span
+                          className={`font-bold ${
+                            isAvailable ? "text-green-500" : "text-red-500"
+                          }`}
+                        >
                           {isAvailable ? "Available" : "Unavailable"}
                         </span>
                         <h3 className="text-sm font-semibold mt-2">
@@ -551,7 +896,7 @@ const Appointment = () => {
                         <p className="text-gray-600 text-sm">
                           {doctor.specialization}
                         </p>
-                        <p className="text-gray-800 font-medium mt-2">
+                        <p className="text-gray-800 font-medium text-sm mt-2">
                           Fee: ₹{doctor.fees}
                         </p>
                       </div>
@@ -570,28 +915,34 @@ const Appointment = () => {
 
                 {/* Add Consultation Type Selection */}
                 <div className="mb-4">
-                  <h3 className="text-base font-semibold mb-2 text-gray-800">Consultation Type</h3>
+                  <h3 className="text-base font-semibold mb-2 text-gray-800">
+                    Consultation Type
+                  </h3>
                   <div className="flex gap-2">
                     {/* Direct Visit Option */}
-                    <div 
+                    <div
                       className={`flex-1 p-3 border-2 rounded-lg cursor-pointer transition-all duration-300 ${
-                        consultationType === 'in-person' 
-                          ? 'border-blue-500 bg-blue-50' 
-                          : 'border-gray-200 hover:border-blue-300 bg-white'
+                        consultationType === "in-person"
+                          ? "border-blue-500 bg-blue-50"
+                          : "border-gray-200 hover:border-blue-300 bg-white"
                       }`}
-                      onClick={() => setConsultationType('in-person')}
+                      onClick={() => setConsultationType("in-person")}
                     >
                       <div className="flex items-center space-x-2">
-                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                          consultationType === 'in-person' 
-                            ? 'border-blue-500 bg-blue-500' 
-                            : 'border-gray-300'
-                        }`}>
-                          {consultationType === 'in-person' && (
+                        <div
+                          className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                            consultationType === "in-person"
+                              ? "border-blue-500 bg-blue-500"
+                              : "border-gray-300"
+                          }`}
+                        >
+                          {consultationType === "in-person" && (
                             <div className="w-1 h-1 rounded-full bg-white"></div>
                           )}
                         </div>
-                        <span className="font-medium text-sm text-gray-800">Direct Visit</span>
+                        <span className="font-medium text-sm text-gray-800">
+                          Direct Visit
+                        </span>
                       </div>
                       <div className="mt-1 ml-6 text-xs text-gray-600">
                         <p>• Face-to-face consultation</p>
@@ -600,18 +951,22 @@ const Appointment = () => {
                     </div>
 
                     {/* Online Consultation Option */}
-                    <div 
-                      className="flex-1 p-3 border-2 rounded-lg cursor-not-allowed opacity-50 transition-all duration-300 border-gray-200 bg-white"
-                    >
+                    <div className="flex-1 p-3 border-2 rounded-lg cursor-not-allowed opacity-50 transition-all duration-300 border-gray-200 bg-white">
                       <div className="flex items-center space-x-2">
                         <div className="w-4 h-4 rounded-full border-2 border-gray-300 flex items-center justify-center">
                           <div className="w-1 h-1 rounded-full bg-gray-300"></div>
                         </div>
-                        <span className="font-medium text-sm text-gray-800">Online Consultation</span>
+                        <span className="font-medium text-sm text-gray-800">
+                          Online Consultation
+                        </span>
                       </div>
                       <div className="mt-1 ml-6 text-xs">
-                        <p className="text-red-500 font-medium">• Temporarily Unavailable</p>
-                        <p className="text-gray-600">• Video call consultation</p>
+                        <p className="text-red-500 font-medium">
+                          • Temporarily Unavailable
+                        </p>
+                        <p className="text-gray-600">
+                          • Video call consultation
+                        </p>
                         <p className="text-gray-600">• No travel required</p>
                       </div>
                     </div>
@@ -676,32 +1031,39 @@ const Appointment = () => {
                   {/* Available Time Slots */}
                   {selectedDoctor && selectedDate && (
                     <div className="mt-6">
-                      <h3 className="text-lg font-semibold">Available Time Slots</h3>
+                      <h3 className="text-lg font-semibold">
+                        Available Time Slots
+                      </h3>
                       <div className="grid grid-cols-3 gap-3 mt-4">
                         {loading ? (
                           <div className="col-span-3 text-center py-4">
                             Loading available slots...
                           </div>
-                        ) : availableSlots[selectedDoctor._id]?.[selectedDate]?.length > 0 ? (
-                          availableSlots[selectedDoctor._id][selectedDate].map((time, index) => (
-                            <div
-                              key={index}
-                              onClick={() => setSlotTime(time)}
-                              className={`text-center p-3 rounded-lg cursor-pointer transition-colors
+                        ) : availableSlots[selectedDoctor._id]?.[selectedDate]
+                            ?.length > 0 ? (
+                          availableSlots[selectedDoctor._id][selectedDate].map(
+                            (time, index) => (
+                              <div
+                                key={index}
+                                onClick={() => setSlotTime(time)}
+                                className={`text-center p-3 rounded-lg cursor-pointer transition-colors
                                 ${
                                   time === slotTime
                                     ? "bg-blue-500 text-white"
                                     : "bg-gray-50 hover:bg-gray-100 border border-gray-200"
                                 }
                               `}
-                            >
-                              {new Date(`2000-01-01T${time}`).toLocaleTimeString([], {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                                hour12: true,
-                              })}
-                            </div>
-                          ))
+                              >
+                                {new Date(
+                                  `2000-01-01T${time}`
+                                ).toLocaleTimeString([], {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                  hour12: true,
+                                })}
+                              </div>
+                            )
+                          )
                         ) : (
                           <div className="col-span-3 text-center py-4 text-gray-500">
                             No slots available for this day

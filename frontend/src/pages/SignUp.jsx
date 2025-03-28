@@ -36,11 +36,37 @@ const Signup = () => {
     const file = e.target.files[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        toast.error("File size should be less than 5MB");
+        toast.error("File size should be less than 5MB",
+          {
+            duration: 2000,
+            position: "top-right",
+            style: {
+              background: "#EF4444",
+              color: "#fff",
+              borderRadius: "8px",
+              padding: "12px 24px",
+              fontSize: "14px",
+              fontWeight: "500",
+            },
+          }
+        );
         return;
       }
       if (!file.type.startsWith("image/")) {
-        toast.error("Please upload a valid image file");
+        toast.error("Please upload a valid image file",
+          {
+            duration: 2000,
+            position: "top-right",
+            style: {
+              background: "#EF4444",
+              color: "#fff",
+              borderRadius: "8px",
+              padding: "12px 24px",
+              fontSize: "14px",
+              fontWeight: "500",
+            },
+          }
+        );
         return;
       }
       setFormData((prev) => ({
@@ -75,19 +101,56 @@ const Signup = () => {
       !contactNumber||
       !profilePicture
     ) {
-      toast.error("All fields are required", { theme: "colored" });
+      toast.error("All fields are required", 
+        {
+          duration: 2000,
+          position: "top-right",
+          style: {
+            background: "#EF4444",
+            color: "#fff",
+            borderRadius: "8px",
+            padding: "12px 24px",
+            fontSize: "14px",
+            fontWeight: "500",
+          },
+        }
+      );
       return false;
     }
 
     if (!profilePicture.type.startsWith("image/")) {
-      toast.error("Please upload a valid image file for profile picture");
+      toast.error("Please upload a valid image file for profile picture",
+        {
+          duration: 2000,
+          position: "top-right",
+          style: {
+            background: "#EF4444",
+            color: "#fff",
+            borderRadius: "8px",
+            padding: "12px 24px",
+            fontSize: "14px",
+            fontWeight: "500",
+          },
+        }
+      );
       return false;
     }
 
     if (!nameRegex.test(firstName)) {
       toast.error(
         "First name should not contain numbers or special characters",
-        { theme: "colored" }
+        {
+          duration: 2000,
+          position: "top-right",
+          style: {
+            background: "#EF4444",
+            color: "#fff",
+            borderRadius: "8px",
+            padding: "12px 24px",
+            fontSize: "14px",
+            fontWeight: "500",
+          },
+        }
       );
       return false;
     }
@@ -95,28 +158,70 @@ const Signup = () => {
     if (!nameRegex.test(lastName)) {
       toast.error(
         "Last name should not contain numbers or special characters",
-        { theme: "colored" }
+        {
+          duration: 2000,
+          position: "top-right",
+          style: {
+            background: "#EF4444",
+            color: "#fff",
+            borderRadius: "8px",
+            padding: "12px 24px",
+            fontSize: "14px",
+            fontWeight: "500",
+          },
+        }
       );
       return false;
     }
 
     if (password.length < 6) {
       toast.error("Password must be at least 6 characters", {
-        theme: "colored",
+        duration: 2000,
+        position: "top-right",
+        style: {
+          background: "#EF4444",
+          color: "#fff",
+          borderRadius: "8px",
+          padding: "12px 24px",
+          fontSize: "14px",
+          fontWeight: "500",
+        },
       });
       return false;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      toast.error("Please enter a valid email", { theme: "colored" });
+      toast.error("Please enter a valid email",
+        {
+          duration: 2000,
+          position: "top-right",
+          style: {
+            background: "#EF4444",
+            color: "#fff",
+            borderRadius: "8px",
+            padding: "12px 24px",
+            fontSize: "14px",
+            fontWeight: "500",
+          },
+        }
+      );
       return false;
     }
 
     const contactRegex = /^[0-9]{10}$/;
     if (!contactRegex.test(contactNumber)) {
       toast.error("Please enter a valid 10-digit contact number", {
-        theme: "colored",
+        duration: 2000,
+        position: "top-right",
+        style: {
+          background: "#EF4444",
+          color: "#fff",
+          borderRadius: "8px",
+          padding: "12px 24px",
+          fontSize: "14px",
+          fontWeight: "500",
+        },
       });
       return false;
     }
@@ -165,7 +270,18 @@ const Signup = () => {
       );
 
       if (response.data.success) {
-        toast.success("Registration successful! You can now log in.", {theme:"colored"});
+        toast.success("Registration successful! You can now log in.",  {
+          duration: 2000,
+          position: 'top-right',
+          style: {
+            background: '#22C55E',
+            color: '#fff',
+            borderRadius: '8px',
+            padding: '12px 24px',
+            fontSize: '14px',
+            fontWeight: '500',
+          },
+        });
         setUser(response.data);
         navigate('/login');
       }

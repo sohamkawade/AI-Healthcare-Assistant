@@ -15,6 +15,7 @@ import Profile from './pages/Profile';
 import VideoConsultation from './pages/VideoConsultation';
 import MedicationReminder from './pages/MedicationReminder';
 import ForgotPassword from './components/ForgotPassword';
+import ResetPassword from './components/ResetPassword';
 import PersonalHealthRecord from './pages/PersonalHealthRecord';
 import NewPrescription from './pages/NewPrescription';
 import Prescriptions from './pages/Prescriptions';
@@ -61,6 +62,7 @@ const MainContent = () => {
       <Route path="/medication-reminder" element={<MedicationReminder />} />
       <Route path="/personal-health-record" element={<PersonalHealthRecord />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/aichat" element={<Aichat />} />
       <Route path="/new-prescription" element={<NewPrescription />} />
       <Route path="/prescriptions" element={<Prescriptions />} />

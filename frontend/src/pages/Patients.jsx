@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { FaUserMd, FaCalendarAlt, FaClock, FaSort, FaSortUp, FaSortDown, FaChevronDown, FaPhone } from 'react-icons/fa';
+import { FaUserMd, FaCalendarAlt, FaClock, FaSort, FaSortUp, FaSortDown, FaChevronDown, FaPhone, FaHospitalUser } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
-import apiService from '../services/apiService';
 
 const Patients = () => {
   const navigate = useNavigate();
@@ -272,8 +271,7 @@ const Patients = () => {
               {sortedPatients.map((patient) => (
                 <div
                   key={patient._id}
-                  onClick={() => handlePatientClick(patient)}
-                  className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-gray-50 transition-colors cursor-pointer"
+                  className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-gray-50 transition-colors"
                 >
                   <div className="col-span-4">
                     <div className="flex items-center space-x-4">
@@ -313,12 +311,8 @@ const Patients = () => {
         ) : (
           <div className="flex flex-col items-center justify-center h-64 bg-white rounded-lg border border-gray-200 shadow-sm">
             <div className="w-12 h-12 rounded-full overflow-hidden mb-4">
-              <img
-                src="http://localhost:5001/uploads/default-avatar.png"
-                alt="No patients"
-                className="w-full h-full object-cover"
-              />
             </div>
+            <FaHospitalUser className="text-gray-400 text-4xl mb-4" />
             <p className="text-sm font-medium text-gray-900 mb-1">No patients found</p>
             <p className="text-xs text-gray-500">
               Patients will appear here when they schedule appointments with you

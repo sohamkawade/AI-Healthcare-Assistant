@@ -7,7 +7,7 @@ import {
   FaCalendarAlt,
   FaPills,
 } from "react-icons/fa";
-import { toast } from "react-toastify";
+import { toast, Toaster } from "react-hot-toast";
 import apiService from "../services/apiService";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
@@ -127,22 +127,66 @@ const MedicationReminder = () => {
           setDose("");
           setTime("");
           setError("");
-          toast.success("Medication reminder added successfully!", {
-            theme: "colored",
-          });
+          toast.success("Medication reminder added successfully!",  {
+            duration: 2000,
+            position: 'top-right',
+            style: {
+              background: '#22C55E',
+              color: '#fff',
+              borderRadius: '8px',
+              padding: '12px 24px',
+              fontSize: '14px',
+              fontWeight: '500',
+            },
+          })
         } else {
           setError("Invalid data in API response.");
           toast.error("Failed to add medication reminder.", {
-            theme: "colored",
+            duration: 2000,
+            position: 'top-right',
+            style: {
+              background: '#EF4444',
+              color: '#fff',
+              borderRadius: '8px',
+              padding: '12px 24px',
+              fontSize: '14px',
+              fontWeight: '500',
+            },
           });
         }
       } catch (error) {
         setError("Failed to add medication reminder.");
-        toast.error("Failed to add medication reminder.", { theme: "colored" });
+        toast.error("Failed to add medication reminder.", 
+          {
+            duration: 2000,
+            position: 'top-right',
+            style: {
+              background: '#EF4444',
+              color: '#fff',
+              borderRadius: '8px',
+              padding: '12px 24px',
+              fontSize: '14px',
+              fontWeight: '500',
+            },
+          }
+        );
       }
     } else {
       setError("All fields are required.");
-      toast.error("All fields are required.", { theme: "colored" });
+      toast.error("All fields are required.",
+        {
+          duration: 2000,
+          position: 'top-right',
+          style: {
+            background: '#EF4444',
+            color: '#fff',
+            borderRadius: '8px',
+            padding: '12px 24px',
+            fontSize: '14px',
+            fontWeight: '500',
+          },
+        }
+      );
     }
   };
 
@@ -160,17 +204,44 @@ const MedicationReminder = () => {
           );
           return updatedMedications;
         });
-        toast.success("Medication reminder deleted successfully!", {
-          theme: "colored",
+        toast.success("Medication reminder deleted successfully!",  {
+          duration: 2000,
+          position: 'top-right',
+          style: {
+            background: '#22C55E',
+            color: '#fff',
+            borderRadius: '8px',
+            padding: '12px 24px',
+            fontSize: '14px',
+            fontWeight: '500',
+          },
         });
       } else {
         toast.error("Failed to delete medication reminder.", {
-          theme: "colored",
+          duration: 2000,
+          position: 'top-right',
+          style: {
+            background: '#EF4444',
+            color: '#fff',
+            borderRadius: '8px',
+            padding: '12px 24px',
+            fontSize: '14px',
+            fontWeight: '500',
+          },
         });
       }
     } catch (error) {
       toast.error("An error occurred while deleting the medication reminder.", {
-        theme: "colored",
+        duration: 2000,
+        position: 'top-right',
+        style: {
+          background: '#EF4444',
+          color: '#fff',
+          borderRadius: '8px',
+          padding: '12px 24px',
+          fontSize: '14px',
+          fontWeight: '500',
+        },
       });
     }
   };
@@ -195,6 +266,52 @@ const MedicationReminder = () => {
 
   return (
     <div className="flex flex-col items-center bg-gradient-to-br from-custom-light-blue via-custom-light-teal to-custom-light-cyan">
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: "#fff",
+            color: "#363636",
+            borderRadius: "8px",
+            padding: "12px 24px",
+            fontSize: "14px",
+            fontWeight: "500",
+            boxShadow:
+              "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+          },
+          success: {
+            style: {
+              background: "#22C55E",
+              color: "#fff",
+            },
+            iconTheme: {
+              primary: "#fff",
+              secondary: "#22C55E",
+            },
+          },
+          error: {
+            style: {
+              background: "#EF4444",
+              color: "#fff",
+            },
+            iconTheme: {
+              primary: "#fff",
+              secondary: "#EF4444",
+            },
+          },
+          warning: {
+            style: {
+              background: "#F97316",
+              color: "#fff",
+            },
+            iconTheme: {
+              primary: "#fff",
+              secondary: "#F97316",
+            },
+          },
+        }}
+      />
       <motion.div
         initial={{ opacity: 0, translateY: -20 }}
         animate={{ opacity: 1, translateY: 0 }}

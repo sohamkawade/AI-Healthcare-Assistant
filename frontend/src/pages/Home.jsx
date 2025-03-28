@@ -1,6 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { FaStethoscope, FaArrowRight, FaStar, FaUserMd, FaUsers, FaRobot, FaCheckCircle } from "react-icons/fa";
+import {
+  FaStethoscope,
+  FaArrowRight,
+  FaStar,
+  FaUserMd,
+  FaUsers,
+  FaRobot,
+  FaCheckCircle,
+} from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import aihome from "../assets/aihome.jpg";
 import apiService from "../services/apiService";
@@ -15,7 +23,7 @@ const Home = () => {
     const fetchDoctors = async () => {
       try {
         const response = await apiService.getDoctors();
-        
+
         if (response && response.success) {
           const doctorsData = response.data || [];
           setDoctors(doctorsData);
@@ -23,26 +31,33 @@ const Home = () => {
           setDoctors([]);
           toast.error("Failed to load doctors list. Please try again later.", {
             style: {
-              background: '#EF4444',
-              color: '#FFFFFF',
-              borderRadius: '8px',
-              padding: '12px 24px',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
-            }
+              background: "#EF4444",
+              color: "#FFFFFF",
+              borderRadius: "8px",
+              padding: "12px 24px",
+              boxShadow:
+                "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+            },
           });
         }
         setLoading(false);
       } catch (error) {
         setDoctors([]);
-        toast.error(`Error: ${error.message || "An error occurred while fetching doctors list."}`, {
-          style: {
-            background: '#EF4444',
-            color: '#FFFFFF',
-            borderRadius: '8px',
-            padding: '12px 24px',
-            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+        toast.error(
+          `Error: ${
+            error.message || "An error occurred while fetching doctors list."
+          }`,
+          {
+            style: {
+              background: "#EF4444",
+              color: "#FFFFFF",
+              borderRadius: "8px",
+              padding: "12px 24px",
+              boxShadow:
+                "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+            },
           }
-        });
+        );
         setLoading(false);
       }
     };
@@ -72,7 +87,9 @@ const Home = () => {
               </h1>
 
               <p className="text-lg sm:text-xl text-purple-700 max-w-lg leading-relaxed">
-                Experience modern healthcare with our AI-powered platform. Get instant medical insights and connect with expert doctors for personalized care.
+                Experience modern healthcare with our AI-powered platform. Get
+                instant medical insights and connect with expert doctors for
+                personalized care.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 pt-4">
@@ -83,7 +100,7 @@ const Home = () => {
                   whileTap={{ scale: 0.98 }}
                 >
                   <span className="relative z-10">Get Started</span>
-                  <FaArrowRight className="group-hover:translate-x-1 transition-transform relative z-10" />
+                  {/* <FaArrowRight className="group-hover:translate-x-1 transition-transform relative z-10" /> */}
                   <div className="absolute inset-0 bg-gradient-to-r from-purple-800 to-blue-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 </motion.button>
                 <motion.button
@@ -132,9 +149,12 @@ const Home = () => {
             transition={{ duration: 0.6 }}
             className="text-center mb-12"
           >
-            <h2 className="text-3xl font-bold text-purple-900 mb-4">Our Expert Doctors</h2>
+            <h2 className="text-3xl font-bold text-purple-900 mb-4">
+              Our Expert Doctors
+            </h2>
             <p className="text-purple-700 max-w-2xl mx-auto">
-              Meet our team of experienced healthcare professionals ready to provide you with the best medical care.
+              Meet our team of experienced healthcare professionals ready to
+              provide you with the best medical care.
             </p>
           </motion.div>
 
@@ -144,7 +164,9 @@ const Home = () => {
             </div>
           ) : doctors.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-gray-600">No doctors available at the moment.</p>
+              <p className="text-gray-600">
+                No doctors available at the moment.
+              </p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -171,7 +193,9 @@ const Home = () => {
                     )}
                   </div>
                   <div className="p-4">
-                    <h3 className="text-lg font-semibold text-purple-900">Dr. {doctor.firstName} {doctor.lastName}</h3>
+                    <h3 className="text-lg font-semibold text-purple-900">
+                      Dr. {doctor.firstName} {doctor.lastName}
+                    </h3>
                     <p className="text-purple-700">{doctor.specialization}</p>
                   </div>
                 </motion.div>
@@ -188,14 +212,16 @@ const Home = () => {
             transition={{ duration: 0.6 }}
             className="text-center mb-12"
           >
-            <h2 className="text-3xl font-bold text-purple-900 mb-4">Our Impact</h2>
+            <h2 className="text-3xl font-bold text-purple-900 mb-4">
+              Our Impact
+            </h2>
             <p className="text-purple-700 max-w-2xl mx-auto">
               Making healthcare accessible to everyone
             </p>
           </motion.div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
@@ -205,27 +231,31 @@ const Home = () => {
               <div className="text-4xl font-bold text-purple-700 mb-2">10+</div>
               <div className="text-gray-600">Doctors</div>
             </motion.div>
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
               className="text-center p-4 rounded-xl bg-white/80 shadow-sm hover:shadow-xl transition-shadow hover:bg-white"
             >
               <FaUsers className="text-4xl text-purple-700 mx-auto mb-3" />
-              <div className="text-4xl font-bold text-purple-700 mb-2">100+</div>
+              <div className="text-4xl font-bold text-purple-700 mb-2">
+                100+
+              </div>
               <div className="text-gray-600">Patients</div>
             </motion.div>
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.3 }}
               className="text-center p-4 rounded-xl bg-white/80 shadow-sm hover:shadow-xl transition-shadow hover:bg-white"
             >
               <FaRobot className="text-4xl text-purple-700 mx-auto mb-3" />
-              <div className="text-4xl font-bold text-purple-700 mb-2">24/7</div>
+              <div className="text-4xl font-bold text-purple-700 mb-2">
+                24/7
+              </div>
               <div className="text-gray-600">AI Support</div>
             </motion.div>
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.4 }}

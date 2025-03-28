@@ -7,37 +7,67 @@ const path = require('path');
 // Get prescriptions for a doctor
 exports.getDoctorPrescriptions = async (req, res) => {
   try {
-    const query = { 
-      doctorId: req.user._id,
-      'deletedBy.doctor': false // Only get prescriptions not deleted by doctor
-    };
     
-    const prescriptions = await Prescription.find(query)
-      .populate('patientId', 'firstName lastName email')
-      .sort({ createdAt: -1 });
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({
+        success: false,
+        message: 'User not authenticated'
+      });
+    }
 
-    res.json({
+    if (req.user.role !== 'doctor') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Only doctors can view prescriptions.'
+      });
+    }
+
+    const prescriptions = await Prescription.find({
+      doctorId: req.user._id,
+      'deletedBy.doctor': { $ne: true }
+    })
+    .populate('patientId', 'firstName lastName email phone')
+    .sort({ createdAt: -1 });
+
+
+    const mappedPrescriptions = prescriptions.map(prescription => {
+      try {
+        if (!prescription.patientId) {
+          return null;
+        }
+
+        return {
+          _id: prescription._id,
+          patient: {
+            _id: prescription.patientId._id,
+            firstName: prescription.patientId.firstName,
+            lastName: prescription.patientId.lastName,
+            email: prescription.patientId.email,
+            phone: prescription.patientId.phone
+          },
+          diagnosis: prescription.diagnosis,
+          symptoms: prescription.symptoms,
+          medications: prescription.medications,
+          instructions: prescription.instructions,
+          status: prescription.status,
+          createdAt: prescription.createdAt,
+          updatedAt: prescription.updatedAt
+        };
+      } catch (mapError) {
+        return null;
+      }
+    }).filter(Boolean);
+    
+    res.status(200).json({
       success: true,
-      data: prescriptions.map(prescription => ({
-        _id: prescription._id,
-        patient: {
-          _id: prescription.patientId._id,
-          firstName: prescription.patientId.firstName,
-          lastName: prescription.patientId.lastName,
-          email: prescription.patientId.email
-        },
-        diagnosis: prescription.diagnosis,
-        symptoms: prescription.symptoms,
-        medications: prescription.medications,
-        instructions: prescription.instructions,
-        status: prescription.status,
-        createdAt: prescription.createdAt
-      }))
+      data: mappedPrescriptions
     });
   } catch (error) {
-    res.status(500).json({ 
-      success: false, 
-      message: 'Failed to fetch prescriptions' 
+    
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching prescriptions',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 };
@@ -73,7 +103,6 @@ exports.getPatientPrescriptions = async (req, res) => {
       }))
     });
   } catch (error) {
-    console.error('Error fetching patient prescriptions:', error);
     res.status(500).json({ 
       success: false, 
       message: 'Failed to fetch prescriptions' 
@@ -120,7 +149,6 @@ exports.getPrescriptionById = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error fetching prescription:', error);
     res.status(500).json({ 
       success: false, 
       message: 'Failed to fetch prescription' 
@@ -191,7 +219,6 @@ exports.createPrescription = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error creating prescription:', error);
     res.status(500).json({ 
       success: false, 
       message: 'Failed to create prescription',
@@ -230,7 +257,6 @@ exports.updatePrescriptionStatus = async (req, res) => {
       data: prescription
     });
   } catch (error) {
-    console.error('Error updating prescription status:', error);
     res.status(500).json({ 
       success: false, 
       message: 'Failed to update prescription status' 
@@ -278,7 +304,6 @@ exports.deletePrescription = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error deleting prescription:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to delete prescription'
@@ -420,7 +445,6 @@ exports.downloadPrescription = async (req, res) => {
     // Finalize PDF
     doc.end();
   } catch (error) {
-    console.error('Error downloading prescription:', error);
     res.status(500).json({ 
       success: false, 
       message: 'Failed to download prescription' 

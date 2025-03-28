@@ -126,6 +126,29 @@ const apiService = {
         })
     );
   },
+
+  updateProfile: async (formData) => {
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error('No token provided. Please log in again.');
+
+    try {
+      // Make sure to have proper Content-Type
+      const response = await axios.put(`${API_BASE_URL}/auth/profile`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        }
+      });
+
+      if (!response.data.success) {
+        throw new Error(response.data.message || 'Failed to update profile');
+      }
+
+      return response.data;
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      throw new Error(error.response?.data?.message || 'Failed to update profile');
+    }
+  },
   
 
   getPatientById: async (patientId) => {
@@ -199,30 +222,7 @@ const apiService = {
     }
   },
 
-  // Forgot Password API
-  forgotPassword: async (email) => {
-    try {
-      const response = await axios.post(`${API_BASE_URL}/auth/forgot-password`, { email });
-      return response.data;
-    } catch (error) {
-      const errorMessage = error.response?.data?.message || error.message || "Error sending reset link";
-      throw new Error(errorMessage);
-    }
-  },
 
-  // Reset Password API
-  resetPassword: async (token, newPassword) => {
-    try {
-      const response = await axios.post(`${API_BASE_URL}/auth/reset-password`, {
-        token,
-        password: newPassword,
-      });
-      return response.data;
-    } catch (error) {
-      const errorMessage = error.response?.data?.message || error.message || "Error resetting password";
-      throw new Error(errorMessage);
-    }
-  },
 
   bookAppointment: async (appointmentData) => {
     const token = localStorage.getItem('token');

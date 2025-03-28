@@ -169,8 +169,6 @@ const Dashboard = () => {
               },
             };
           }
-
-          // For non-cancelled appointments, use API version
           return apiApt;
         });
 
@@ -1018,14 +1016,12 @@ const Dashboard = () => {
                                   toast.success("Payment successful! Appointment completed.");
                                 }
                               } catch (error) {
-                                console.error("Payment error:", error);
-                                toast.error("Payment failed.");
                               }
 
                               setIsProcessing(false);
                             }, 3000);
                           }}
-                          className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded-md transition-colors flex items-center"
+                          className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs rounded-md transition-colors flex items-center"
                         >
                           <FaCreditCard className="mr-1 text-xs" />
                           <span>Pay Now</span>
@@ -1035,7 +1031,7 @@ const Dashboard = () => {
                       {/* Payment Processing Box */}
                       {isProcessing && (
                         <div className="fixed inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm z-50">
-                          <div className="bg-white p-6 rounded-xl w-80 text-center shadow-lg">
+                          <div className="bg-white p-6 rounded-xl w-80 text-center shadow-sm">
                             <div className="flex flex-col items-center">
                               <div className="w-12 h-12 bg-green-50 rounded-full flex items-center justify-center mb-4">
                                 <FaCreditCard className="text-green-500 text-xl" />
@@ -1157,7 +1153,7 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-custom-light-blue via-custom-light-teal to-custom-light-cyan p-6">
-      <Toaster
+    <Toaster
         position="top-right"
         toastOptions={{
           duration: 3000,
@@ -1180,7 +1176,13 @@ const Dashboard = () => {
               background: '#EF4444',
               color: '#fff',
             },
-          }
+          },
+          warning: {
+            style: {
+              background: '#F97316',
+              color: '#fff',
+            },
+          },
         }}
       />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

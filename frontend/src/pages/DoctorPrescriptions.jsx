@@ -27,13 +27,20 @@ const DoctorPrescriptions = () => {
   useEffect(() => {
     const fetchPrescriptions = async () => {
       try {
-        if (!user?._id) return;
+
+        const token = localStorage.getItem('token');
+        if (!token) {
+          toast.error('Authentication required');
+          navigate('/login');
+          return;
+        }
 
         const response = await axios.get(
           `http://localhost:5001/api/prescriptions/doctor`,
           {
             headers: {
-              Authorization: `Bearer ${localStorage.getItem('token')}`
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
             }
           }
         );
@@ -42,24 +49,27 @@ const DoctorPrescriptions = () => {
           setPrescriptions(response.data.data);
         } else {
           setPrescriptions([]);
+          toast.error(response.data.message || 'No prescriptions found');
         }
       } catch (error) {
-        toast.error('Failed to fetch prescriptions', {
-          style: {
-            background: '#EF4444',
-            color: '#FFFFFF',
-            borderRadius: '8px',
-            padding: '12px 24px',
-            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
-          }
-        });
+        console.error('Error fetching prescriptions:', error);
+        if (error.response?.status === 401) {
+          toast.error('Session expired. Please login again');
+          navigate('/login');
+        } else if (error.response?.status === 403) {
+          toast.error('Access denied. Only doctors can view prescriptions');
+          navigate('/dashboard');
+        } else {
+          toast.error(error.response?.data?.message || 'Failed to fetch prescriptions');
+        }
+        setPrescriptions([]);
       } finally {
         setLoading(false);
       }
     };
 
     fetchPrescriptions();
-  }, [user?._id]);
+  }, [user?._id, navigate]);
 
   const handleDownload = async (prescriptionId) => {
     try {

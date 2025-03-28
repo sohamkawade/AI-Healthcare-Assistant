@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
+import { toast, Toaster } from 'react-hot-toast';
 import { useAuth } from "../hooks/useAuth";
 import apiService from "../services/apiService";
 import {
@@ -12,6 +12,7 @@ import {
   FaEdit,
   FaSave,
   FaTimes,
+  FaMoneyBillWave,
 } from "react-icons/fa";
 import { GraduationCap, HeartPulse } from "lucide-react";
 import { motion } from "framer-motion";
@@ -23,6 +24,77 @@ const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedUser, setEditedUser] = useState(null);
   const [profilePicture, setProfilePicture] = useState(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email) {
+      toast.error('Email is required');
+      return false;
+    }
+    if (!emailRegex.test(email)) {
+      toast.error('Please enter a valid email address');
+      return false;
+    }
+    return true;
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    
+    // Update the state immediately for all fields
+    setEditedUser(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleFileChange = (e) => {
+    setProfilePicture(e.target.files[0]);
+  };
+
+  const handleSave = async () => {
+    try {
+      // Validate email before saving
+      if (!validateEmail(editedUser.email)) {
+        return;
+      }
+
+      const formData = new FormData();
+      
+      // Append all user data
+      Object.keys(editedUser).forEach(key => {
+        if (key !== 'userType' && key !== 'profilePicture' && editedUser[key] !== undefined && editedUser[key] !== null) {
+          if (key === 'fees') {
+            if (editedUser[key] && editedUser[key] !== '') {
+              formData.append(key, editedUser[key]);
+            }
+          } else {
+            formData.append(key, editedUser[key]);
+          }
+        }
+      });
+
+      if (profilePicture) {
+        formData.append('profilePicture', profilePicture);
+      }
+
+      const response = await apiService.updateProfile(formData);
+      
+      if (response.success) {
+        setIsEditing(false);
+        setProfilePicture(null);
+        toast.success('Profile updated successfully!');
+        
+        setTimeout(() => {
+          setRefreshTrigger(prev => prev + 1);
+        }, 1000);
+      }
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      toast.error(error.message || 'Failed to update profile');
+    }
+  };
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -37,7 +109,11 @@ const Profile = () => {
         if (response && response.data) {
           const userData = response.data;
           const userType = userData.specialization ? "doctor" : "patient";
-
+          
+          if (userData.fees !== undefined) {
+            userData.fees = Number(userData.fees);
+          }
+          
           setUser({
             ...userData,
             userType: userType,
@@ -62,9 +138,8 @@ const Profile = () => {
       }
     };
 
-    // Always fetch profile data when component mounts
     fetchProfile();
-  }, [navigate, setUser]);
+  }, [navigate, setUser, refreshTrigger]);
 
   const handleEdit = () => {
     setIsEditing(true);
@@ -74,54 +149,6 @@ const Profile = () => {
     setIsEditing(false);
     setEditedUser(user);
     setProfilePicture(null);
-  };
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setEditedUser(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleFileChange = (e) => {
-    setProfilePicture(e.target.files[0]);
-  };
-
-  const handleSave = async () => {
-    try {
-      const formData = new FormData();
-      
-      // Append all user data
-      Object.keys(editedUser).forEach(key => {
-        if (key !== 'userType' && key !== 'profilePicture' && editedUser[key] !== undefined && editedUser[key] !== null) {
-          formData.append(key, editedUser[key]);
-        }
-      });
-
-      // Append profile picture if changed
-      if (profilePicture) {
-        formData.append('profilePicture', profilePicture);
-      }
-
-      const response = await apiService.updateProfile(formData);
-      
-      if (response.success) {
-        // Update both user and editedUser states with the new data
-        const updatedUser = {
-          ...response.data,
-          userType: response.userType
-        };
-        setUser(updatedUser);
-        setEditedUser(updatedUser);
-        setIsEditing(false);
-        setProfilePicture(null);
-        toast.success('Profile updated successfully!', {theme:'colored'});
-      }
-    } catch (error) {
-      console.error('Error saving profile:', error);
-      toast.error(error.message || 'Failed to update profile');
-    }
   };
 
   if (loading || profileLoading) {
@@ -146,9 +173,41 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-custom-light-blue via-custom-light-teal to-custom-light-cyan">
-      <div className="bg-white shadow-xl rounded-xl w-full max-w-md p-6 space-y-4 border-t-4 border-purple-500">
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: '#fff',
+            color: '#363636',
+            borderRadius: '8px',
+            padding: '12px 24px',
+            fontSize: '14px',
+            fontWeight: '500',
+          },
+          success: {
+            style: {
+              background: '#22C55E',
+              color: '#fff',
+            },
+          },
+          error: {
+            style: {
+              background: '#EF4444',
+              color: '#fff',
+            },
+          },
+          warning: {
+            style: {
+              background: '#F97316',
+              color: '#fff',
+            },
+          },
+        }}
+      />
+      <div className="bg-white shadow-xl rounded-xl w-full max-w-xl p-6 space-y-5 border-t-4 border-purple-500">
         <div className="text-center">
-          <div className="flex justify-center items-center mb-2">
+          <div className="flex justify-center items-center mb-3">
             {isEditing ? (
               <div className="relative">
                 <img
@@ -180,9 +239,9 @@ const Profile = () => {
           </div>
 
           <h1 className="text-xl font-extrabold text-purple-700">
-            Hello, {editedUser?.firstName || "User"}!
+            Hello, {editedUser?.userType === "doctor" ? `Dr. ${editedUser?.firstName || "User"}` : editedUser?.firstName || "User"}!
           </h1>
-          <p className="text-gray-600 mt-1 text-xs">
+          <p className="text-gray-600 mt-1.5 text-sm">
             Here's your personal healthcare profile.
           </p>
         </div>
@@ -197,19 +256,19 @@ const Profile = () => {
             initial={{ x: -50, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ duration: 0.6 }}
-            className="flex items-center bg-purple-50 p-2 rounded-lg shadow-md"
+            className="flex items-center bg-purple-50 p-3 rounded-lg shadow-md"
           >
-            <FaUserMd className="text-purple-500 w-5 h-5 mr-2" />
-            <div>
+            <FaUserMd className="text-purple-500 w-5 h-5 mr-2.5" />
+            <div className="flex-1">
               <p className="text-gray-700 text-sm font-medium">Full Name</p>
               {isEditing ? (
-                <div className="flex gap-1">
+                <div className="flex gap-2">
                   <input
                     type="text"
                     name="firstName"
                     value={editedUser?.firstName || ''}
                     onChange={handleChange}
-                    className="w-full px-2 py-1 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+                    className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
                     placeholder="First Name"
                   />
                   <input
@@ -217,13 +276,13 @@ const Profile = () => {
                     name="lastName"
                     value={editedUser?.lastName || ''}
                     onChange={handleChange}
-                    className="w-full px-2 py-1 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+                    className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
                     placeholder="Last Name"
                   />
                 </div>
               ) : (
-                <p className="text-gray-500 text-xs">
-                  {editedUser?.firstName} {editedUser?.lastName}
+                <p className="text-gray-500 text-sm break-words">
+                  {editedUser?.userType === "doctor" ? `Dr. ${editedUser?.firstName} ${editedUser?.lastName}` : `${editedUser?.firstName} ${editedUser?.lastName}`}
                 </p>
               )}
             </div>
@@ -233,10 +292,10 @@ const Profile = () => {
             initial={{ x: 50, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ duration: 0.6 }}
-            className="flex items-center bg-purple-50 p-2 rounded-lg shadow-md"
+            className="flex items-center bg-purple-50 p-3 rounded-lg shadow-md min-h-[80px]"
           >
-            <FaEnvelope className="text-purple-500 w-5 h-5 mr-2" />
-            <div>
+            <FaEnvelope className="text-purple-500 w-5 h-5 mr-2.5" />
+            <div className="flex-1">
               <p className="text-gray-700 text-sm font-medium">Email</p>
               {isEditing ? (
                 <input
@@ -244,11 +303,14 @@ const Profile = () => {
                   name="email"
                   value={editedUser?.email || ''}
                   onChange={handleChange}
-                  className="w-full px-2 py-1 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+                  className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
                   placeholder="Enter your email"
+                  required
                 />
               ) : (
-                <p className="text-gray-500 text-xs">{editedUser?.email}</p>
+                <p className="text-gray-500 text-sm break-all truncate hover:text-clip hover:whitespace-normal">
+                  {editedUser?.email}
+                </p>
               )}
             </div>
           </motion.div>
@@ -265,36 +327,10 @@ const Profile = () => {
               initial={{ x: -50, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ duration: 0.8 }}
-              className="flex items-center bg-purple-50 p-2 rounded-lg shadow-md"
+              className="flex items-center bg-purple-50 p-3 rounded-lg shadow-md min-h-[80px]"
             >
-              <FaMapMarkerAlt className="text-purple-500 w-5 h-5 mr-2" />
-              <div>
-                <p className="text-gray-700 text-sm font-medium">Address</p>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    name="address"
-                    value={editedUser?.address || ''}
-                    onChange={handleChange}
-                    className="w-full px-2 py-1 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
-                    placeholder="Enter your address"
-                  />
-                ) : (
-                  <p className="text-gray-500 text-xs">
-                    {editedUser?.address || "Not Provided"}
-                  </p>
-                )}
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ x: 50, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ duration: 0.8 }}
-              className="flex items-center bg-purple-50 p-2 rounded-lg shadow-md"
-            >
-              <FaPhone className="text-purple-500 w-5 h-5 mr-2" />
-              <div>
+              <FaPhone className="text-purple-500 w-5 h-5 mr-2.5" />
+              <div className="flex-1">
                 <p className="text-gray-700 text-sm font-medium">
                   Contact Number
                 </p>
@@ -304,12 +340,37 @@ const Profile = () => {
                     name="contactNumber"
                     value={editedUser?.contactNumber || ''}
                     onChange={handleChange}
-                    className="w-full px-2 py-1 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+                    className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
                     placeholder="Enter your phone number"
                   />
                 ) : (
-                  <p className="text-gray-500 text-xs">
+                  <p className="text-gray-500 text-sm break-words">
                     {editedUser?.contactNumber || "Not Provided"}
+                  </p>
+                )}
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ x: 50, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ duration: 0.8 }}
+              className="flex items-center bg-purple-50 p-3 rounded-lg shadow-md min-h-[80px]"
+            >
+              <FaCalendarAlt className="text-purple-500 w-5 h-5 mr-2.5" />
+              <div className="flex-1">
+                <p className="text-gray-700 text-sm font-medium">Birthdate</p>
+                {isEditing ? (
+                  <input
+                    type="date"
+                    name="birthdate"
+                    value={editedUser?.birthdate?.split("T")[0] || ''}
+                    onChange={handleChange}
+                    className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+                  />
+                ) : (
+                  <p className="text-gray-500 text-sm break-words">
+                    {editedUser?.birthdate?.split("T")[0] || "Not Provided"}
                   </p>
                 )}
               </div>
@@ -319,22 +380,23 @@ const Profile = () => {
               initial={{ x: -50, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ duration: 0.8 }}
-              className="flex items-center bg-purple-50 p-2 rounded-lg shadow-md"
+              className="flex items-center bg-purple-50 p-3 rounded-lg shadow-md min-h-[80px] sm:col-span-2"
             >
-              <FaCalendarAlt className="text-purple-500 w-5 h-5 mr-2" />
-              <div>
-                <p className="text-gray-700 text-sm font-medium">Birthdate</p>
+              <FaMapMarkerAlt className="text-purple-500 w-5 h-5 mr-2.5" />
+              <div className="flex-1">
+                <p className="text-gray-700 text-sm font-medium">Address</p>
                 {isEditing ? (
                   <input
-                    type="date"
-                    name="birthdate"
-                    value={editedUser?.birthdate?.split("T")[0] || ''}
+                    type="text"
+                    name="address"
+                    value={editedUser?.address || ''}
                     onChange={handleChange}
-                    className="w-full px-2 py-1 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+                    className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+                    placeholder="Enter your address"
                   />
                 ) : (
-                  <p className="text-gray-500 text-xs">
-                    {editedUser?.birthdate?.split("T")[0] || "Not Provided"}
+                  <p className="text-gray-500 text-sm break-words">
+                    {editedUser?.address || "Not Provided"}
                   </p>
                 )}
               </div>
@@ -353,10 +415,10 @@ const Profile = () => {
               initial={{ x: -50, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ duration: 0.6 }}
-              className="flex items-center bg-purple-50 p-2 rounded-lg shadow-md"
+              className="flex items-center bg-purple-50 p-3 rounded-lg shadow-md min-h-[80px]"
             >
-              <HeartPulse className="text-purple-500 w-5 h-5 mr-2" />
-              <div>
+              <HeartPulse className="text-purple-500 w-5 h-5 mr-2.5" />
+              <div className="flex-1">
                 <p className="text-gray-700 text-sm font-medium">
                   Specialization
                 </p>
@@ -366,11 +428,11 @@ const Profile = () => {
                     name="specialization"
                     value={editedUser?.specialization || ''}
                     onChange={handleChange}
-                    className="w-full px-2 py-1 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+                    className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
                     placeholder="Enter your specialization"
                   />
                 ) : (
-                  <p className="text-gray-500 text-xs">{editedUser?.specialization}</p>
+                  <p className="text-gray-500 text-sm break-words">{editedUser?.specialization}</p>
                 )}
               </div>
             </motion.div>
@@ -379,10 +441,10 @@ const Profile = () => {
               initial={{ x: 50, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ duration: 0.6 }}
-              className="flex items-center bg-purple-50 p-2 rounded-lg shadow-md"
+              className="flex items-center bg-purple-50 p-3 rounded-lg shadow-md min-h-[80px]"
             >
-              <GraduationCap className="text-purple-500 w-5 h-5 mr-2" />
-              <div>
+              <GraduationCap className="text-purple-500 w-5 h-5 mr-2.5" />
+              <div className="flex-1">
                 <p className="text-gray-700 text-sm font-medium">Degree</p>
                 {isEditing ? (
                   <input
@@ -390,11 +452,47 @@ const Profile = () => {
                     name="degree"
                     value={editedUser?.degree || ''}
                     onChange={handleChange}
-                    className="w-full px-2 py-1 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+                    className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
                     placeholder="Enter your degree"
                   />
                 ) : (
-                  <p className="text-gray-500 text-xs">{editedUser?.degree}</p>
+                  <p className="text-gray-500 text-sm break-words">{editedUser?.degree}</p>
+                )}
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ x: -50, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ duration: 0.8 }}
+              className="flex items-center bg-purple-50 p-3 rounded-lg shadow-md min-h-[80px]"
+            >
+              <FaMoneyBillWave className="text-purple-500 w-5 h-5 mr-2.5" />
+              <div className="flex-1">
+                <p className="text-gray-700 text-sm font-medium">Consultation Fee (₹)</p>
+                {isEditing ? (
+                  <input
+                    type="number"
+                    name="fees"
+                    value={editedUser?.fees || ''}
+                    onChange={handleChange}
+                    min="0"
+                    step="100"
+                    className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+                    placeholder="Enter consultation fee"
+                  />
+                ) : (
+                  <p className="text-gray-500 text-sm break-words">
+                    {(() => {
+                      if (editedUser?.exactFee) {
+                        return `₹${editedUser.exactFee}`;
+                      }
+                      if (editedUser?.fees) {
+                        return `₹${editedUser.fees}`;
+                      }
+                      return 'Not Set';
+                    })()}
+                  </p>
                 )}
               </div>
             </motion.div>

@@ -1,5 +1,5 @@
 import React, { useState, useContext } from "react";
-import { ToastContainer, toast } from "react-toastify";
+import { toast, Toaster } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { AuthContext } from "../context/AuthContext";
@@ -35,11 +35,33 @@ const DoctorSignup = () => {
     const file = e.target.files[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        toast.warn("File size should be less than 5MB");
+        toast.warn("File size should be less than 5MB", {
+          duration: 2000,
+          position: "top-right",
+          style: {
+            background: "#F97316",
+            color: "#fff",
+            borderRadius: "8px",
+            padding: "12px 24px",
+            fontSize: "14px",
+            fontWeight: "500",
+          },
+        });
         return;
       }
       if (!file.type.startsWith("image/")) {
-        toast.warn("Please upload a valid image file");
+        toast.warn("Please upload a valid image file", {
+          duration: 2000,
+          position: "top-right",
+          style: {
+            background: "#F97316",
+            color: "#fff",
+            borderRadius: "8px",
+            padding: "12px 24px",
+            fontSize: "14px",
+            fontWeight: "500",
+          },
+        });
         return;
       }
       setFormData((prev) => ({
@@ -74,13 +96,35 @@ const DoctorSignup = () => {
       !degree ||
       !profilePicture
     ) {
-      toast.error("All fields including profile picture are required");
+      toast.error("All fields including profile picture are required", {
+        duration: 2000,
+        position: "top-right",
+        style: {
+          background: "#EF4444",
+          color: "#fff",
+          borderRadius: "8px",
+          padding: "12px 24px",
+          fontSize: "14px",
+          fontWeight: "500",
+        },
+      });
       return false;
     }
 
     // Check if profile picture is a valid image file
     if (!profilePicture.type.startsWith("image/")) {
-      toast.error("Please upload a valid image file for profile picture");
+      toast.error("Please upload a valid image file for profile picture", {
+        duration: 2000,
+        position: "top-right",
+        style: {
+          background: "#EF4444",
+          color: "#fff",
+          borderRadius: "8px",
+          padding: "12px 24px",
+          fontSize: "14px",
+          fontWeight: "500",
+        },
+      });
       return false;
     }
 
@@ -88,35 +132,105 @@ const DoctorSignup = () => {
 
     if (!nameRegex.test(firstName)) {
       toast.error(
-        "First name should not contain numbers or special characters"
+        "First name should not contain numbers or special characters",
+        {
+          duration: 2000,
+          position: "top-right",
+          style: {
+            background: "#EF4444",
+            color: "#fff",
+            borderRadius: "8px",
+            padding: "12px 24px",
+            fontSize: "14px",
+            fontWeight: "500",
+          },
+        }
       );
       return false;
     }
 
     if (!nameRegex.test(lastName)) {
-      toast.error("Last name should not contain numbers or special characters");
+      toast.error(
+        "Last name should not contain numbers or special characters",
+        {
+          duration: 2000,
+          position: "top-right",
+          style: {
+            background: "#EF4444",
+            color: "#fff",
+            borderRadius: "8px",
+            padding: "12px 24px",
+            fontSize: "14px",
+            fontWeight: "500",
+          },
+        }
+      );
       return false;
     }
 
     if (password.length < 6) {
-      toast.error("Password must be at least 6 characters");
+      toast.error("Password must be at least 6 characters", {
+        duration: 2000,
+        position: "top-right",
+        style: {
+          background: "#EF4444",
+          color: "#fff",
+          borderRadius: "8px",
+          padding: "12px 24px",
+          fontSize: "14px",
+          fontWeight: "500",
+        },
+      });
       return false;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      toast.error("Please enter a valid email");
+      toast.error("Please enter a valid email", {
+        duration: 2000,
+        position: "top-right",
+        style: {
+          background: "#EF4444",
+          color: "#fff",
+          borderRadius: "8px",
+          padding: "12px 24px",
+          fontSize: "14px",
+          fontWeight: "500",
+        },
+      });
       return false;
     }
 
     const contactRegex = /^[0-9]{10}$/;
     if (!contactRegex.test(contactNumber)) {
-      toast.error("Please enter a valid 10-digit contact number");
+      toast.error("Please enter a valid 10-digit contact number", {
+        duration: 2000,
+        position: "top-right",
+        style: {
+          background: "#EF4444",
+          color: "#fff",
+          borderRadius: "8px",
+          padding: "12px 24px",
+          fontSize: "14px",
+          fontWeight: "500",
+        },
+      });
       return false;
     }
 
     if (isNaN(fees) || fees <= 0) {
-      toast.error("Fees must be a positive number");
+      toast.error("Fees must be a positive number", {
+        duration: 2000,
+        position: "top-right",
+        style: {
+          background: "#EF4444",
+          color: "#fff",
+          borderRadius: "8px",
+          padding: "12px 24px",
+          fontSize: "14px",
+          fontWeight: "500",
+        },
+      });
       return false;
     }
 
@@ -166,15 +280,18 @@ const DoctorSignup = () => {
 
       if (response.data.success) {
         toast.success("Registration successful! You can now log in.", {
+          duration: 2000,
+          position: "top-right",
           style: {
-            background: "#166534",
+            background: "#22C55E",
             color: "#fff",
-            border: "2px solid #166534",
-            fontWeight: "bold"
+            borderRadius: "8px",
+            padding: "12px 24px",
+            fontSize: "14px",
+            fontWeight: "500",
           },
         });
         setDoctorData(response.data);
-        // Clear any existing user data from localStorage
         localStorage.removeItem("user");
         localStorage.removeItem("token");
         localStorage.removeItem("role");
@@ -193,22 +310,30 @@ const DoctorSignup = () => {
         toast.error(
           "This email is already registered. Please try logging in or use a different email.",
           {
+            duration: 2000,
+            position: "top-right",
             style: {
-              background: "#DC2626",
+              background: "#EF4444",
               color: "#fff",
-              border: "2px solid #DC2626",
-              fontWeight: "bold"
+              borderRadius: "8px",
+              padding: "12px 24px",
+              fontSize: "14px",
+              fontWeight: "500",
             },
           }
         );
         navigate("/login");
       } else {
         toast.error(errorMessage, {
+          duration: 2000,
+          position: "top-right",
           style: {
-            background: "#DC2626",
+            background: "#EF4444",
             color: "#fff",
-            border: "2px solid #DC2626",
-            fontWeight: "bold"
+            borderRadius: "8px",
+            padding: "12px 24px",
+            fontSize: "14px",
+            fontWeight: "500",
           },
         });
       }
@@ -219,6 +344,38 @@ const DoctorSignup = () => {
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-custom-light-blue via-custom-light-teal to-custom-light-cyan">
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: "#fff",
+            color: "#363636",
+            borderRadius: "8px",
+            padding: "12px 24px",
+            fontSize: "14px",
+            fontWeight: "500",
+          },
+          success: {
+            style: {
+              background: "#22C55E",
+              color: "#fff",
+            },
+          },
+          error: {
+            style: {
+              background: "#EF4444",
+              color: "#fff",
+            },
+          },
+          warning: {
+            style: {
+              background: "#F97316",
+              color: "#fff",
+            },
+          },
+        }}
+      />
       <motion.div
         className="w-2/5 max-w-2xl p-7 bg-white rounded-lg shadow-lg"
         initial={{ opacity: 0, y: 40 }}
@@ -347,18 +504,6 @@ const DoctorSignup = () => {
           </a>
         </p>
       </motion.div>
-      <ToastContainer
-        position="top-right"
-        autoClose={5000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="colored"
-      />
     </div>
   );
 };

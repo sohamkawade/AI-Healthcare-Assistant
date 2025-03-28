@@ -57,8 +57,14 @@ const doctorSchema = new mongoose.Schema({
         required: [true, 'Contact number is required']
     },
     fees: {
-        type: Number,
-        required: [true, 'Consultation fee is required']
+        type: String,
+        required: [true, 'Consultation fee is required'],
+        get: function(v) {
+            return Number(v);
+        },
+        set: function(v) {
+            return v.toString();
+        }
     },
     degree: {
         type: String,
@@ -136,6 +142,11 @@ const doctorSchema = new mongoose.Schema({
             delete ret.createdAt;
             delete ret.updatedAt;
 
+            // Preserve the exact fee value
+            if (ret.fees) {
+                ret.exactFee = ret.fees;
+            }
+
             // Add availability status with safe defaults
             try {
                 const today = new Date().toISOString().split('T')[0];
@@ -163,6 +174,14 @@ const doctorSchema = new mongoose.Schema({
             return ret;
         }
     }
+});
+
+// Add a pre-save hook to log changes
+doctorSchema.pre('save', function(next) {
+  if (this.isModified('fees')) {
+    console.log(`Doctor ${this._id} fees changed to: ${this.fees}`);
+  }
+  next();
 });
 
 // Method to check if a specific time slot is available
