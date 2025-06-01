@@ -80,7 +80,7 @@ const Login = () => {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-custom-light-blue via-custom-light-teal to-custom-light-cyan ">
+    <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-custom-light-blue via-custom-light-teal to-custom-light-cyan px-4 py-8 sm:px-6 lg:px-8">
       <Toaster
         position="top-right"
         toastOptions={{
@@ -114,13 +114,13 @@ const Login = () => {
         }}
       />
       <motion.div
-        className="bg-white shadow-lg rounded-lg p-7 max-w-lg"
+        className="bg-white shadow-lg rounded-lg p-4 sm:p-6 lg:p-5 w-full max-w-sm mx-auto"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
         <motion.h2
-          className="text-3xl font-bold text-center text-black mb-6"
+          className="text-2xl sm:text-2xl lg:text-2xl font-bold text-center text-black mb-4 sm:mb-5"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7 }}
@@ -131,7 +131,7 @@ const Login = () => {
         {/* Error message */}
         {error && <motion.p
           aria-live="assertive"
-          className="text-red-600 text-center mb-4 font-medium"
+          className="text-red-600 text-center mb-3 text-sm sm:text-sm lg:text-sm font-medium"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
@@ -139,39 +139,39 @@ const Login = () => {
           {error}
         </motion.p>}
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
           <motion.div
-            className="mb-5"
+            className="space-y-1.5"
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <label htmlFor="email" className="block text-black font-semibold mb-2">Email</label>
+            <label htmlFor="email" className="block text-black text-sm font-semibold">Email</label>
             <input
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500 text-gray-800"
+              className="w-full p-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500 text-gray-800"
               placeholder="Enter your email"
             />
           </motion.div>
 
           <motion.div
-            className="mb-6"
+            className="space-y-1.5"
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
           >
-            <label htmlFor="password" className="block text-black font-semibold mb-2">Password</label>
+            <label htmlFor="password" className="block text-black text-sm font-semibold">Password</label>
             <input
               id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500 text-gray-800"
+              className="w-full p-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-500 text-gray-800"
               placeholder="Enter your password"
             />
           </motion.div>
@@ -179,7 +179,7 @@ const Login = () => {
           <motion.button
             type="submit"
             disabled={loading}
-            className={`w-full p-2 rounded-lg font-semibold text-white ${loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-700'} transition-all duration-300 transform hover:scale-105`}
+            className={`w-full p-2 text-sm rounded-lg font-semibold text-white ${loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-700'} transition-all duration-300 transform hover:scale-105`}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.2 }}
@@ -188,15 +188,15 @@ const Login = () => {
           </motion.button>
         </form>
 
-        <p className="text-center mt-2 text-black font-medium">
+        <p className="text-center mt-3 text-sm text-black font-medium">
           Don't have an account?{' '}
           <span className="text-blue-700 font-medium">Choose an option to register:</span>
         </p>
 
-        <div className="flex justify-center gap-4 mt-4">
+        <div className="flex flex-col sm:flex-row justify-center gap-2 sm:gap-3 mt-3">
           <motion.a
             href="/signup"
-            className="w-full sm:w-1/2 p-2 text-center bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-all duration-300 transform hover:scale-105 shadow-md"
+            className="w-full p-2 text-sm text-center bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-all duration-300 transform hover:scale-105 shadow-md"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.3 }}
@@ -205,7 +205,7 @@ const Login = () => {
           </motion.a>
           <motion.a
             href="/doctor-signup"
-            className="w-full sm:w-1/2 p-2 text-center bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-all duration-300 transform hover:scale-105 shadow-md"
+            className="w-full p-2 text-sm text-center bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-all duration-300 transform hover:scale-105 shadow-md"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.4 }}
@@ -214,7 +214,7 @@ const Login = () => {
           </motion.a>
         </div>
 
-        <p className="text-center mt-4 text-gray-600 font-medium">
+        <p className="text-center mt-3 text-sm text-gray-600 font-medium">
           <a
             href="/forgot-password"
             className="text-purple-600 hover:text-purple-800 transition-all duration-300 transform hover:underline"

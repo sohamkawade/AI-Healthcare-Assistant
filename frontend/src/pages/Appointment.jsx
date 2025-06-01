@@ -788,7 +788,7 @@ const Appointment = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-custom-light-blue via-custom-light-teal to-custom-light-cyan p-6">
+    <div className="min-h-screen bg-gradient-to-br from-custom-light-blue via-custom-light-teal to-custom-light-cyan p-6 pt-20 sm:pt-24 md:pt-28">
       <Toaster
         position="top-right"
         toastOptions={{
@@ -840,27 +840,23 @@ const Appointment = () => {
           <>
             <div className="pr-4">
               <h2 className="text-3xl font-bold mb-6">Select a Doctor</h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {doctors.map((doctor) => {
                   const isSelected = selectedDoctor?._id === doctor._id;
-
-                  // Check availability based on actual available slots
-                  let isAvailable = true; // Default available for unselected doctors
+                  let isAvailable = true;
 
                   if (isSelected && selectedDate) {
-                    // Check if there are any available slots for this doctor on the selected date
-                    const doctorSlots =
-                      availableSlots[doctor._id]?.[selectedDate] || [];
+                    const doctorSlots = availableSlots[doctor._id]?.[selectedDate] || [];
                     isAvailable = doctorSlots.length > 0;
                   }
 
                   return (
                     <div
                       key={doctor._id}
-                      className={`relative rounded-lg shadow-lg p-4 cursor-pointer transition-all duration-300 transform hover:scale-105 ${
+                      className={`relative rounded-lg shadow-md p-3 cursor-pointer transition-all duration-300 ${
                         isSelected
-                          ? "border-2 border-blue-500"
-                          : "border border-gray-200"
+                          ? "border-2 border-blue-500 bg-blue-50"
+                          : "border border-gray-200 hover:border-blue-300 hover:bg-gray-50"
                       }`}
                       onClick={() => {
                         setSelectedDoctor(doctor);
@@ -869,36 +865,57 @@ const Appointment = () => {
                         }
                       }}
                     >
-                      <div className="relative w-full h-40 mb-2 aspect-square">
-                        {doctor.profilePicture ? (
-                          <img
-                            src={`http://localhost:5001${doctor.profilePicture}`}
-                            alt={`${doctor.firstName} ${doctor.lastName}`}
-                            className="w-full h-full object-cover rounded-sm"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-gray-100 rounded-lg">
-                            <span className="text-gray-400">No Image</span>
+                      <div className="flex items-center gap-3">
+                        <div className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0">
+                          {doctor.profilePicture ? (
+                            <img
+                              src={`http://localhost:5001${doctor.profilePicture}`}
+                              alt={`${doctor.firstName} ${doctor.lastName}`}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-gray-100 rounded-full">
+                              <span className="text-gray-400 text-xs">No Image</span>
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between mb-0.5">
+                            <h3 className="text-base font-semibold text-gray-900 truncate">
+                              Dr. {doctor.firstName} {doctor.lastName}
+                            </h3>
                           </div>
-                        )}
-                      </div>
-                      <div className="mt-4 text-center">
-                        <span
-                          className={`font-bold ${
-                            isAvailable ? "text-green-500" : "text-red-500"
-                          }`}
-                        >
-                          {isAvailable ? "Available" : "Unavailable"}
-                        </span>
-                        <h3 className="text-sm font-semibold mt-2">
-                          {doctor.firstName} {doctor.lastName}
-                        </h3>
-                        <p className="text-gray-600 text-sm">
-                          {doctor.specialization}
-                        </p>
-                        <p className="text-gray-800 font-medium text-sm mt-2">
-                          Fee: ₹{doctor.fees}
-                        </p>
+                          <p className="text-gray-600 text-sm mb-1 truncate">
+                            {doctor.specialization}
+                          </p>
+                          <div className="flex items-center gap-1.5 mb-1">
+                            <div className="flex items-center">
+                              {[...Array(5)].map((_, i) => (
+                                <FaStar
+                                  key={i}
+                                  className={`w-3.5 h-3.5 ${
+                                    i < (doctor.rating || 0)
+                                      ? "text-yellow-400"
+                                      : "text-gray-300"
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                            <span className="text-xs text-gray-600">
+                              {doctor.rating || 0} ({doctor.reviews?.length || 0} reviews)
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between mt-2">
+                            <p className="text-gray-800 font-medium text-sm">
+                              Fee: ₹{doctor.fees}
+                            </p>
+                            <span className={`text-xs font-medium px-1.5 py-0.5 rounded-full ${
+                              isAvailable ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                            }`}>
+                              {isAvailable ? "Available" : "Unavailable"}
+                            </span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   );
@@ -907,99 +924,65 @@ const Appointment = () => {
             </div>
 
             {selectedDoctor && (
-              <div className="border border-gray-300 rounded-lg p-6 h-fit">
-                <h3 className="text-2xl font-bold mb-4">
-                  Appointment with Dr. {selectedDoctor.firstName}{" "}
-                  {selectedDoctor.lastName}
-                </h3>
+              <div className="mt-16 border border-gray-300 rounded-lg p-4 h-fit w-full">
 
                 {/* Add Consultation Type Selection */}
-                <div className="mb-4">
-                  <h3 className="text-base font-semibold mb-2 text-gray-800">
-                    Consultation Type
-                  </h3>
-                  <div className="flex gap-2">
+                <div className="mb-3">
+                  <h3 className="text-sm font-semibold mb-1.5 text-gray-800">Select Consultation Type</h3>
+                  <div className="flex gap-1.5">
                     {/* Direct Visit Option */}
                     <div
-                      className={`flex-1 p-3 border-2 rounded-lg cursor-pointer transition-all duration-300 ${
-                        consultationType === "in-person"
+                      className={`flex-1 p-2 border-2 rounded-md cursor-pointer transition-all duration-300 ${consultationType === "in-person"
                           ? "border-blue-500 bg-blue-50"
-                          : "border-gray-200 hover:border-blue-300 bg-white"
+                          : "border-gray-200 hover:border-blue-300 bg-white"}
                       }`}
                       onClick={() => setConsultationType("in-person")}
                     >
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-1.5">
                         <div
-                          className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                            consultationType === "in-person"
+                          className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center ${consultationType === "in-person"
                               ? "border-blue-500 bg-blue-500"
-                              : "border-gray-300"
+                              : "border-gray-300"}
                           }`}
                         >
                           {consultationType === "in-person" && (
-                            <div className="w-1 h-1 rounded-full bg-white"></div>
+                            <div className="w-0.5 h-0.5 rounded-full bg-white"></div>
                           )}
                         </div>
-                        <span className="font-medium text-sm text-gray-800">
-                          Direct Visit
-                        </span>
+                        <span className="font-medium text-xs text-gray-800">Direct Visit</span>
                       </div>
-                      <div className="mt-1 ml-6 text-xs text-gray-600">
+                      <div className="mt-0.5 ml-5 text-[10px] text-gray-600">
                         <p>• Face-to-face consultation</p>
                         <p>• Physical examination available</p>
                       </div>
                     </div>
 
                     {/* Online Consultation Option */}
-                    <div className="flex-1 p-3 border-2 rounded-lg cursor-not-allowed opacity-50 transition-all duration-300 border-gray-200 bg-white">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-4 h-4 rounded-full border-2 border-gray-300 flex items-center justify-center">
-                          <div className="w-1 h-1 rounded-full bg-gray-300"></div>
+                    <div className="flex-1 p-2 border-2 rounded-md cursor-not-allowed opacity-50 transition-all duration-300 border-gray-200 bg-white">
+                      <div className="flex items-center space-x-1.5">
+                        <div className="w-3.5 h-3.5 rounded-full border-2 border-gray-300 flex items-center justify-center">
+                          <div className="w-0.5 h-0.5 rounded-full bg-gray-300"></div>
                         </div>
-                        <span className="font-medium text-sm text-gray-800">
-                          Online Consultation
-                        </span>
+                        <span className="font-medium text-xs text-gray-800">Online Consultation</span>
                       </div>
-                      <div className="mt-1 ml-6 text-xs">
-                        <p className="text-red-500 font-medium">
-                          • Temporarily Unavailable
-                        </p>
-                        <p className="text-gray-600">
-                          • Video call consultation
-                        </p>
+                      <div className="mt-0.5 ml-5 text-[10px]">
+                        <p className="text-red-500 font-medium">• Temporarily Unavailable</p>
+                        <p className="text-gray-600">• Video call consultation</p>
                         <p className="text-gray-600">• No travel required</p>
                       </div>
                     </div>
                   </div>
 
                   {/* Important Notes */}
-                  <div className="mt-2 p-2 bg-gray-50 rounded text-xs text-gray-600">
-                    <p>• Arrive 15 mins before appointment</p>
-                    <p>• Keep medical records ready</p>
+                  <div className="mt-1.5 p-1.5 bg-gray-50 rounded text-[10px] text-gray-600">
+                    {/* Removed notes about arrival time and medical records */}
                   </div>
                 </div>
 
-                {selectedDoctor.profilePicture ? (
-                  <img
-                    src={`http://localhost:5001${selectedDoctor.profilePicture}`}
-                    alt={`${selectedDoctor.firstName} ${selectedDoctor.lastName}`}
-                    className="w-32 h-32 object-cover rounded-sm"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gray-100 rounded-lg">
-                    <span className="text-gray-400">No Image</span>
-                  </div>
-                )}
-                <p className="text-gray-600 mt-2">
-                  {selectedDoctor.degree} | {selectedDoctor.specialization}
-                </p>
-                <p className="text-gray-800 font-medium">
-                  Fee: ₹{selectedDoctor.fees}
-                </p>
-
-                <div className="mt-6">
-                  <h3 className="text-xl font-bold">Available Slots</h3>
-                  <div className="flex gap-4 mt-4 pb-2">
+                {/* Date Selection */}
+                <div className="mt-3 mb-3">
+                  <h3 className="text-sm font-semibold mb-1.5 text-gray-800">Select Date</h3>
+                  <div className="flex gap-1.5 overflow-x-auto pb-1.5">
                     {Array.isArray(docSlots) &&
                       docSlots.map((slot, index) => {
                         const slotDate = new Date(slot.formattedDate);
@@ -1007,6 +990,7 @@ const Appointment = () => {
                           "en-US",
                           { day: "numeric" }
                         );
+                        const formattedMonth = slotDate.toLocaleDateString('en-US', { month: 'short' });
 
                         return (
                           <div
@@ -1014,72 +998,69 @@ const Appointment = () => {
                             onClick={() =>
                               handleDateSelection(index, slot.formattedDate)
                             }
-                            className={`text-center py-3 px-4 rounded-lg cursor-pointer flex-shrink-0 transition-colors
+                            className={`text-center py-1.5 px-2 rounded-md cursor-pointer flex-shrink-0 transition-colors text-xs
                               ${
                                 slotIndex === index
                                   ? "bg-blue-500 text-white"
                                   : "border border-gray-300 hover:border-blue-500"
                               }`}
                           >
-                            <p className="font-medium">{slot.dayName}</p>
-                            <p className="text-lg">{formattedDate}</p>
+                            <p className="font-medium text-xs">{slot.dayName}</p>
+                            <p className="text-sm">{formattedDate} {formattedMonth}</p>
                           </div>
                         );
                       })}
                   </div>
-
-                  {/* Available Time Slots */}
-                  {selectedDoctor && selectedDate && (
-                    <div className="mt-6">
-                      <h3 className="text-lg font-semibold">
-                        Available Time Slots
-                      </h3>
-                      <div className="grid grid-cols-3 gap-3 mt-4">
-                        {loading ? (
-                          <div className="col-span-3 text-center py-4">
-                            Loading available slots...
-                          </div>
-                        ) : availableSlots[selectedDoctor._id]?.[selectedDate]
-                            ?.length > 0 ? (
-                          availableSlots[selectedDoctor._id][selectedDate].map(
-                            (time, index) => (
-                              <div
-                                key={index}
-                                onClick={() => setSlotTime(time)}
-                                className={`text-center p-3 rounded-lg cursor-pointer transition-colors
-                                ${
-                                  time === slotTime
-                                    ? "bg-blue-500 text-white"
-                                    : "bg-gray-50 hover:bg-gray-100 border border-gray-200"
-                                }
-                              `}
-                              >
-                                {new Date(
-                                  `2000-01-01T${time}`
-                                ).toLocaleTimeString([], {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                  hour12: true,
-                                })}
-                              </div>
-                            )
-                          )
-                        ) : (
-                          <div className="col-span-3 text-center py-4 text-gray-500">
-                            No slots available for this day
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
                 </div>
+
+                {/* Display Selected Date and Time */}
+                {selectedDate && (
+                  <div className="mt-3 mb-3">
+                    <h3 className="text-sm font-semibold mb-1.5 text-gray-800">Selected Slot</h3>
+                    <div className="flex items-center gap-3">
+                      <p className="text-gray-700 text-xs font-medium flex items-center">
+                        <FaCalendarAlt className="mr-1.5 text-blue-500 w-3.5 h-3.5" />
+                        {new Date(selectedDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                      </p>
+                      {slotTime && (
+                        <p className="text-gray-700 text-xs font-medium flex items-center">
+                          <FaClock className="mr-1.5 text-blue-500 w-3.5 h-3.5" />
+                          {new Date(`2000-01-01T${slotTime}`).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Available Time Slots (Remains) */}
+                {selectedDoctor && selectedDate && (availableSlots[selectedDoctor._id]?.[selectedDate]?.length > 0) && (
+                <div className="mt-3">
+                  <h3 className="text-sm font-semibold mb-2 text-gray-800">Available Time Slots</h3>
+                  <div className="grid grid-cols-3 gap-2">
+                    {availableSlots[selectedDoctor._id][selectedDate].map((time, index) => (
+                      <div
+                        key={index}
+                        onClick={() => setSlotTime(time)}
+                        className={`text-center p-1.5 rounded-md cursor-pointer transition-colors text-xs
+                            ${time === slotTime
+                              ? "bg-blue-500 text-white"
+                              : "bg-gray-100 hover:bg-gray-200 border border-gray-200"}
+                          }`}
+                      >
+                        {new Date(`2000-01-01T${time}`).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
                 <button
                   onClick={handleBookAppointment}
-                  disabled={!slotTime}
-                  className={`px-6 py-3 rounded-full mt-8 transform transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg ${
-                    slotTime
+                  disabled={!slotTime || !selectedDate || !selectedDoctor}
+                  className={`px-4 py-1.5 rounded-full mt-4 w-full text-base transform transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg
+                    ${slotTime && selectedDate && selectedDoctor
                       ? "bg-blue-500 text-white hover:bg-blue-600"
-                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                      : "bg-gray-300 text-gray-500 cursor-not-allowed"}
                   }`}
                 >
                   Book Appointment

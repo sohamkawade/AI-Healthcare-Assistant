@@ -1924,66 +1924,65 @@ Pediatric Dentist for children`
     ];
 
     return (
-        <div className="min-h-screen flex items-center justify-center p-2 sm:p-4">
+        <div className="min-h-screen flex items-center justify-center p-1 sm:p-4 pt-16 sm:pt-20">
             <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
-                className="w-full max-w-xl h-[85vh] flex flex-col bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100"
+                className="w-[90%] sm:w-full max-w-lg h-[calc(100vh-12rem)] sm:h-[calc(100vh-10rem)] flex flex-col bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100"
             >
                 {/* Header */}
                 <motion.div 
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
-                    className="bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-3 flex items-center justify-between"
+                    className="bg-gradient-to-r from-blue-600 to-blue-700 px-3 py-2.5 flex items-center justify-between"
                 >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
                         <motion.div 
                             whileHover={{ scale: 1.1 }}
-                            className="bg-white/10 p-2 rounded-full"
+                            className="bg-white/10 p-1.5 rounded-full"
                         >
-                            <FaStethoscope className="w-5 h-5 text-white" />
+                            <FaStethoscope className="w-4 h-4 text-white" />
                         </motion.div>
                         <div>
-                            <h1 className="text-white text-lg font-semibold"> AI HealthCare Assistant</h1>
+                            <h1 className="text-white text-base font-semibold">AI HealthCare Assistant</h1>
                             <p className="text-white/80 text-xs">Your 24/7 Medical Guide</p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3">
                         <motion.button 
                             whileHover={{ scale: 1.1 }}
                             onClick={handleClearChat}
                             className="text-white/80 hover:text-white transition-colors"
                         >
-                            <FaTrash className="w-4 h-4" />
+                            <FaTrash className="w-3.5 h-3.5" />
                         </motion.button>
                         <motion.button 
                             whileHover={{ scale: 1.1 }}
                             onClick={() => window.history.back()}
                             className="text-white/80 hover:text-white transition-colors"
                         >
-                            <FaTimes className="w-4 h-4" />
+                            <FaTimes className="w-3.5 h-3.5" />
                         </motion.button>
                     </div>
                 </motion.div>
 
                 {/* Chat Body */}
-                <div className="chat-body flex-1 p-4 overflow-y-auto bg-gray-50 scrollbar-hide">
+                <div className="chat-body flex-1 p-3 overflow-y-auto bg-gray-50 scrollbar-hide">
                     {/* Suggestion Questions */}
                     <motion.div 
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="mb-4 bg-gray-50 pb-4"
+                        className="mb-3 bg-gray-50 pb-3"
                     >
                         {/* Heading */}
-                        <div className="text-center mb-6">
-                            <h2 className="text-xl font-semibold text-gray-800">How can I help you today?</h2>
-                            <p className="text-sm text-gray-500 mt-1">Choose a topic or ask your question</p>
+                        <div className="text-center mb-4">
+                            <p className="text-xs text-gray-500 mt-1">Choose a topic or ask your question</p>
                         </div>
 
                         {/* First Row of Horizontal Questions */}
-                        <div className="flex gap-3 overflow-x-auto pb-3 scrollbar-hide mb-3">
+                        <div className="flex gap-0.5 overflow-x-auto pb-2 scrollbar-hide mb-2">
                             {horizontalQuestions.slice(0, 10).map((question, index) => (
                                 <motion.button
                                     key={index}
@@ -1991,7 +1990,7 @@ Pediatric Dentist for children`
                                     animate={{ opacity: 1, x: 0 }}
                                     transition={{ delay: 0.1 * index }}
                                     onClick={() => handleSuggestionClick(question)}
-                                    className="flex-shrink-0 bg-white px-5 py-2.5 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 text-sm text-gray-700 hover:bg-gray-50 whitespace-nowrap w-[160px] flex items-center"
+                                    className="flex-shrink-0 bg-white px-1.5 py-1 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 text-xs text-gray-700 hover:bg-gray-50 whitespace-nowrap w-[100px] sm:w-[120px] flex items-center"
                                 >
                                     {question.icon}
                                     <span className="truncate">{question.text}</span>
@@ -2000,7 +1999,7 @@ Pediatric Dentist for children`
                         </div>
 
                         {/* Second Row of Horizontal Questions */}
-                        <div className="flex gap-3 overflow-x-auto pb-3 scrollbar-hide">
+                        <div className="flex gap-0.5 overflow-x-auto pb-2 scrollbar-hide">
                             {horizontalQuestions.slice(10).map((question, index) => (
                                 <motion.button
                                     key={index}
@@ -2008,7 +2007,7 @@ Pediatric Dentist for children`
                                     animate={{ opacity: 1, x: 0 }}
                                     transition={{ delay: 0.1 * index }}
                                     onClick={() => handleSuggestionClick(question)}
-                                    className="flex-shrink-0 bg-white px-5 py-2.5 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 text-sm text-gray-700 hover:bg-gray-50 whitespace-nowrap w-[160px] flex items-center"
+                                    className="flex-shrink-0 bg-white px-1.5 py-1 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 text-xs text-gray-700 hover:bg-gray-50 whitespace-nowrap w-[100px] sm:w-[120px] flex items-center"
                                 >
                                     {question.icon}
                                     <span className="truncate">{question.text}</span>
@@ -2018,20 +2017,20 @@ Pediatric Dentist for children`
                     </motion.div>
 
                     {/* Chat Messages */}
-                    <div className="mt-4">
+                    <div className="mt-3">
                         {chatHistory.map((message, index) => (
                             <motion.div
                                 key={index}
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                className={`flex ${message.role === "user" ? "justify-end" : "justify-start"} mb-4`}
+                                className={`flex ${message.role === "user" ? "justify-end" : "justify-start"} mb-3`}
                             >
-                                <div className={`rounded-xl px-4 py-2.5 max-w-[85%] ${
+                                <div className={`rounded-lg px-3 py-2 max-w-[85%] ${
                                     message.role === "user"
                                         ? "bg-blue-600 text-white rounded-br-none"
                                         : "bg-white text-gray-800 rounded-bl-none shadow-sm border border-gray-100"
                                 }`}>
-                                    <div className="message-content text-sm leading-relaxed whitespace-pre-wrap break-words"
+                                    <div className="message-content text-xs leading-relaxed whitespace-pre-wrap break-words"
                                         dangerouslySetInnerHTML={{ __html: formatMessageContent(message.content) }}
                                     />
                                 </div>
@@ -2043,9 +2042,9 @@ Pediatric Dentist for children`
                             <motion.div
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
-                                className="flex justify-start mb-4"
+                                className="flex justify-start mb-3"
                             >
-                                <div className="flex items-center gap-2 text-gray-500 text-sm">
+                                <div className="flex items-center gap-2 text-gray-500 text-xs">
                                     <div className="thinking-indicator">
                                         <div className="dot"></div>
                                         <div className="dot"></div>
@@ -2063,12 +2062,12 @@ Pediatric Dentist for children`
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.4 }}
-                    className="border-t border-gray-200 p-4 bg-white"
+                    className="border-t border-gray-200 p-3 bg-white"
                 >
-                    <form onSubmit={handleSubmit} className="flex items-center gap-3">
+                    <form onSubmit={handleSubmit} className="flex items-center gap-2">
                         <motion.textarea 
                             whileFocus={{ scale: 1.02 }}
-                            className="message-input flex-1 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 resize-none text-sm transition-all duration-200 scrollbar-hide"
+                            className="message-input flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 resize-none text-xs transition-all duration-200 scrollbar-hide"
                             placeholder="Ask your health question..."
                             rows="1"
                             value={messageInput}
@@ -2079,9 +2078,9 @@ Pediatric Dentist for children`
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             type="submit"
-                            className="p-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors flex items-center justify-center shadow-md hover:shadow-lg"
+                            className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center shadow-md hover:shadow-lg"
                         >
-                            <FaPaperPlane className="w-4 h-4" />
+                            <FaPaperPlane className="w-3.5 h-3.5" />
                         </motion.button>
                     </form>
                 </motion.div>

@@ -241,8 +241,8 @@ const NewPrescription = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-4">
-      <div className="max-w-2xl mx-auto px-4">
+    <div className="min-h-screen bg-gray-50 py-4 px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 md:pt-28">
+      <div className="max-w-2xl mx-auto">
         <div className="bg-white rounded-lg shadow-sm">
           {!selectedPatient ? (
             <div className="p-4">
@@ -407,12 +407,12 @@ const NewPrescription = () => {
                             </button>
                           )}
                         </div>
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                           <input
                             type="text"
                             value={medication.name}
                             onChange={(e) => handleMedicationChange(index, 'name', e.target.value)}
-                            className="px-3 py-1.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            className="px-3 py-1.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm"
                             placeholder="Medicine name"
                             required
                           />
@@ -420,24 +420,24 @@ const NewPrescription = () => {
                             type="text"
                             value={medication.dosage}
                             onChange={(e) => handleMedicationChange(index, 'dosage', e.target.value)}
-                            className="px-3 py-1.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
-                            placeholder="e.g., 500mg, 2 tablets, 5ml"
+                            className="px-3 py-1.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm"
+                            placeholder="e.g., 500mg"
                             required
                           />
                           <input
                             type="text"
                             value={medication.frequency}
                             onChange={(e) => handleMedicationChange(index, 'frequency', e.target.value)}
-                            className="px-3 py-1.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
-                            placeholder="e.g., Once daily, Twice daily, After meals"
+                            className="px-3 py-1.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm"
+                            placeholder="e.g., Once daily"
                             required
                           />
                           <input
                             type="text"
                             value={medication.duration}
                             onChange={(e) => handleMedicationChange(index, 'duration', e.target.value)}
-                            className="px-3 py-1.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
-                            placeholder="e.g., 7 days, 2 weeks, 1 month"
+                            className="px-3 py-1.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm"
+                            placeholder="e.g., 7 days"
                             required
                           />
                         </div>

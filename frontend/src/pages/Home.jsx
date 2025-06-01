@@ -13,11 +13,23 @@ import { Link, useNavigate } from "react-router-dom";
 import aihome from "../assets/aihome.jpg";
 import apiService from "../services/apiService";
 import { toast } from "react-hot-toast";
+import { useAuth } from "../context/AuthContext";
 
 const Home = () => {
   const navigate = useNavigate();
   const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const { user } = useAuth();
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     const fetchDoctors = async () => {
@@ -66,19 +78,20 @@ const Home = () => {
   }, []);
 
   return (
-    <div className="bg-gradient-to-br from-custom-light-blue via-custom-light-teal to-custom-light-cyan min-h-screen overflow-x-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-custom-light-blue via-custom-light-teal to-custom-light-cyan overflow-x-hidden">
+      {/* Main Content Container */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 md:pt-24">
         {/* Hero Section */}
-        <div className="flex flex-col md:flex-row items-center gap-8 md:gap-16 py-12 md:py-20">
+        <div className="flex flex-col md:flex-row items-center gap-8 md:gap-16 py-8 md:py-12">
           {/* Left Content */}
-          <div className="flex-1 w-full md:w-1/2">
+          <div className="flex-1 w-full md:w-1/2 text-center md:text-left">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
-              className="space-y-6 md:space-y-8"
+              className="space-y-4 md:space-y-6"
             >
-              <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-purple-900 leading-tight">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-purple-900 leading-tight">
                 Smart Healthcare
                 <br />
                 <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-700 via-blue-600 to-purple-700 animate-gradient">
@@ -86,31 +99,30 @@ const Home = () => {
                 </span>
               </h1>
 
-              <p className="text-lg sm:text-xl text-purple-700 max-w-lg leading-relaxed">
+              <p className="text-base sm:text-lg md:text-xl text-purple-700 max-w-lg mx-auto md:mx-0 leading-relaxed">
                 Experience modern healthcare with our AI-powered platform. Get
                 instant medical insights and connect with expert doctors for
                 personalized care.
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-4 pt-4">
+              <div className="flex flex-col sm:flex-row gap-3 pt-4 justify-center md:justify-start">
                 <motion.button
                   onClick={() => navigate("/login")}
-                  className="w-full sm:w-auto bg-gradient-to-r from-purple-700 to-blue-600 text-white px-8 py-4 rounded-xl font-medium hover:shadow-xl transition-all flex items-center justify-center gap-2 group relative overflow-hidden"
+                  className="w-full sm:w-auto bg-gradient-to-r from-purple-700 to-blue-600 text-white px-6 py-3.5 rounded-xl font-medium hover:shadow-xl transition-all flex items-center justify-center gap-2 group relative overflow-hidden"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  <span className="relative z-10">Get Started</span>
-                  {/* <FaArrowRight className="group-hover:translate-x-1 transition-transform relative z-10" /> */}
+                  <span className="relative z-10 text-base">Get Started</span>
                   <div className="absolute inset-0 bg-gradient-to-r from-purple-800 to-blue-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 </motion.button>
                 <motion.button
                   onClick={() => navigate("/aichat")}
-                  className="w-full sm:w-auto bg-white text-purple-700 px-8 py-4 rounded-xl font-medium hover:shadow-xl transition-all flex items-center justify-center gap-2 group border-2 border-purple-700 hover:bg-purple-50"
+                  className="w-full sm:w-auto bg-white text-purple-700 px-6 py-3.5 rounded-xl font-medium hover:shadow-xl transition-all flex items-center justify-center gap-2 group border-2 border-purple-700 hover:bg-purple-50"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  <FaStethoscope className="text-xl" />
-                  Ask AI
+                  <FaStethoscope className="text-lg" />
+                  <span className="text-base">Ask AI</span>
                 </motion.button>
               </div>
             </motion.div>
@@ -118,7 +130,7 @@ const Home = () => {
 
           {/* Right Image */}
           <motion.div
-            className="flex-1 w-full md:w-1/2 relative"
+            className="flex-1 w-full md:w-1/2 relative mt-8 md:mt-0"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
@@ -130,11 +142,11 @@ const Home = () => {
               </div>
 
               {/* Main Image */}
-              <div className="relative mt-12">
+              <div className="relative">
                 <img
                   src={aihome}
                   alt="AI Healthcare"
-                  className="w-full h-[300px] sm:h-[400px] md:h-[450px] object-cover rounded-2xl shadow-2xl"
+                  className="w-full h-[250px] sm:h-[300px] md:h-[400px] lg:h-[450px] object-cover rounded-2xl shadow-2xl"
                 />
               </div>
             </div>
@@ -142,17 +154,17 @@ const Home = () => {
         </div>
 
         {/* Doctor List Section */}
-        <div className="py-16">
+        <div className="py-12 md:py-16">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="text-center mb-12"
+            className="text-center mb-8 md:mb-12"
           >
-            <h2 className="text-3xl font-bold text-purple-900 mb-4">
+            <h2 className="text-2xl sm:text-3xl font-bold text-purple-900 mb-4">
               Our Expert Doctors
             </h2>
-            <p className="text-purple-700 max-w-2xl mx-auto">
+            <p className="text-purple-700 max-w-2xl mx-auto px-4">
               Meet our team of experienced healthcare professionals ready to
               provide you with the best medical care.
             </p>
@@ -169,34 +181,36 @@ const Home = () => {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {doctors.slice(0, 9).map((doctor, index) => (
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 md:gap-6 px-4 sm:px-0">
+              {doctors
+                .slice(0, isMobile ? 4 : 9)
+                .map((doctor, index) => (
                 <motion.div
                   key={doctor._id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: index * 0.1 }}
                   whileHover={{ y: -5 }}
-                  className="bg-white rounded-xl shadow-lg overflow-hidden w-64 mx-auto hover:shadow-xl transition-shadow duration-300"
+                  className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 max-w-[200px] mx-auto w-full"
                 >
-                  <div className="relative w-full h-56">
+                  <div className="relative w-full h-52 sm:h-56">
                     {doctor.profilePicture ? (
                       <img
                         src={`http://localhost:5001${doctor.profilePicture}`}
                         alt={`${doctor.firstName} ${doctor.lastName}`}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover object-center"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-gray-100">
-                        <FaUserMd className="text-4xl text-gray-400" />
+                        <FaUserMd className="text-3xl text-gray-400" />
                       </div>
                     )}
                   </div>
-                  <div className="p-4">
-                    <h3 className="text-lg font-semibold text-purple-900">
+                  <div className="p-2 sm:p-3">
+                    <h3 className="text-sm sm:text-base font-semibold text-purple-900">
                       Dr. {doctor.firstName} {doctor.lastName}
                     </h3>
-                    <p className="text-purple-700">{doctor.specialization}</p>
+                    <p className="text-xs sm:text-sm text-purple-700 mt-1">{doctor.specialization}</p>
                   </div>
                 </motion.div>
               ))}
@@ -205,31 +219,31 @@ const Home = () => {
         </div>
 
         {/* Statistics Section */}
-        <div className="py-16 bg-white/50 rounded-2xl my-8 backdrop-blur-sm">
+        <div className="py-12 md:py-16 bg-white/50 rounded-2xl my-8 backdrop-blur-sm">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="text-center mb-12"
+            className="text-center mb-8 md:mb-12"
           >
-            <h2 className="text-3xl font-bold text-purple-900 mb-4">
+            <h2 className="text-2xl sm:text-3xl font-bold text-purple-900 mb-4">
               Our Impact
             </h2>
-            <p className="text-purple-700 max-w-2xl mx-auto">
+            <p className="text-purple-700 max-w-2xl mx-auto px-4">
               Making healthcare accessible to everyone
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 max-w-4xl mx-auto px-4">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
               className="text-center p-4 rounded-xl bg-white/80 shadow-sm hover:shadow-xl transition-shadow hover:bg-white"
             >
-              <FaUserMd className="text-4xl text-purple-700 mx-auto mb-3" />
-              <div className="text-4xl font-bold text-purple-700 mb-2">10+</div>
-              <div className="text-gray-600">Doctors</div>
+              <FaUserMd className="text-3xl md:text-4xl text-purple-700 mx-auto mb-3" />
+              <div className="text-2xl md:text-4xl font-bold text-purple-700 mb-2">10+</div>
+              <div className="text-sm md:text-base text-gray-600">Doctors</div>
             </motion.div>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -237,11 +251,9 @@ const Home = () => {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="text-center p-4 rounded-xl bg-white/80 shadow-sm hover:shadow-xl transition-shadow hover:bg-white"
             >
-              <FaUsers className="text-4xl text-purple-700 mx-auto mb-3" />
-              <div className="text-4xl font-bold text-purple-700 mb-2">
-                100+
-              </div>
-              <div className="text-gray-600">Patients</div>
+              <FaUsers className="text-3xl md:text-4xl text-purple-700 mx-auto mb-3" />
+              <div className="text-2xl md:text-4xl font-bold text-purple-700 mb-2">100+</div>
+              <div className="text-sm md:text-base text-gray-600">Patients</div>
             </motion.div>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -249,11 +261,9 @@ const Home = () => {
               transition={{ duration: 0.5, delay: 0.3 }}
               className="text-center p-4 rounded-xl bg-white/80 shadow-sm hover:shadow-xl transition-shadow hover:bg-white"
             >
-              <FaRobot className="text-4xl text-purple-700 mx-auto mb-3" />
-              <div className="text-4xl font-bold text-purple-700 mb-2">
-                24/7
-              </div>
-              <div className="text-gray-600">AI Support</div>
+              <FaRobot className="text-3xl md:text-4xl text-purple-700 mx-auto mb-3" />
+              <div className="text-2xl md:text-4xl font-bold text-purple-700 mb-2">24/7</div>
+              <div className="text-sm md:text-base text-gray-600">AI Support</div>
             </motion.div>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -261,9 +271,9 @@ const Home = () => {
               transition={{ duration: 0.5, delay: 0.4 }}
               className="text-center p-4 rounded-xl bg-white/80 shadow-sm hover:shadow-xl transition-shadow hover:bg-white"
             >
-              <FaCheckCircle className="text-4xl text-purple-700 mx-auto mb-3" />
-              <div className="text-4xl font-bold text-purple-700 mb-2">95%</div>
-              <div className="text-gray-600">Accuracy</div>
+              <FaCheckCircle className="text-3xl md:text-4xl text-purple-700 mx-auto mb-3" />
+              <div className="text-2xl md:text-4xl font-bold text-purple-700 mb-2">98%</div>
+              <div className="text-sm md:text-base text-gray-600">Satisfaction</div>
             </motion.div>
           </div>
         </div>

@@ -38,6 +38,7 @@ import {
   FaExternalLinkAlt,
   FaCreditCard,
   FaMoneyBillWave,
+  FaStar,
 } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../hooks/useAuth";
@@ -588,12 +589,6 @@ const Dashboard = () => {
         return;
       }
 
-      if (
-        !window.confirm("Are you sure you want to cancel this appointment?")
-      ) {
-        return;
-      }
-
       // Create cancellation details based on user role
       const cancellerName =
         role === "doctor"
@@ -735,9 +730,12 @@ const Dashboard = () => {
   };
   
 
-  const AppointmentCard = ({ appointment, role }) => {
+  const AppointmentCard = ({ appointment, role, fetchAppointments }) => {
     const isDoctor = role === "doctor";
     const navigate = useNavigate();
+    const [showReviewForm, setShowReviewForm] = useState(false);
+    const [rating, setRating] = useState(0);
+    const [isSubmittingReview, setIsSubmittingReview] = useState(false);
 
     // Get doctor and patient info
     const doctor = appointment.docId || {};
@@ -815,13 +813,62 @@ const Dashboard = () => {
       }
     };
 
+    const handleRatingChange = (newRating) => {
+      setRating(newRating);
+    };
+
+    const handleSubmitReview = async () => {
+      if (rating === 0) {
+        toast.error("Please provide a star rating.");
+        return;
+      }
+
+      setIsSubmittingReview(true);
+      try {
+        const token = localStorage.getItem("token");
+        console.log('Full appointment ID:', appointment._id);
+        const url = `${API_BASE_URL}/appointments/${appointment._id}/review`;
+        console.log(`Submitting review to: ${url}`);
+        console.log('Request payload:', { rating });
+        const response = await axios.post(
+          url,
+          { rating },
+          { 
+            headers: { 
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            } 
+          }
+        );
+
+        if (response.data.success) {
+          toast.success("Review submitted successfully!");
+          setShowReviewForm(false);
+          setRating(0);
+          fetchAppointments();
+        } else {
+          toast.error(response.data.message || "Failed to submit review.");
+        }
+      } catch (error) {
+        console.error("Error submitting review:", error);
+        console.error("Error details:", {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status
+        });
+        toast.error(error.response?.data?.message || "Failed to submit review.");
+      } finally {
+        setIsSubmittingReview(false);
+      }
+    };
+
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className={`bg-white rounded-lg shadow-lg p-4 mb-4 ${appointment.status === "cancelled" ? "opacity-75" : ""}`}
+        className={`bg-white rounded-lg shadow-lg p-4 ${appointment.status === "cancelled" ? "opacity-75" : ""}`}
       >
-        <div className="flex justify-between items-start">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex items-center space-x-4">
             <div className="w-16 h-16 rounded-full overflow-hidden">
               <img
@@ -845,7 +892,7 @@ const Dashboard = () => {
                 )}
               </h3>
 
-              <div className="flex items-center space-x-3 text-xs text-gray-600 mb-1">
+              <div className="flex flex-wrap items-center gap-2 text-xs text-gray-600 mb-1">
                 <span className="flex items-center">
                   <FaCalendarAlt className="mr-1 text-blue-500" />
                   {appointment.slotDate ? moment(appointment.slotDate).format("MMMM D, YYYY") : "Date not set"}
@@ -864,12 +911,12 @@ const Dashboard = () => {
                 </span>
               </div>
 
-              <div className="flex items-center mt-1 space-x-3 text-xs text-gray-600">
+              <div className="flex flex-wrap items-center gap-2 text-xs text-gray-600">
                 <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(appointment.status)}`}>
                   {(appointment.status || "Unknown").charAt(0).toUpperCase() + (appointment.status || "Unknown").slice(1)}
                 </span>
                 {(appointment.status === "cancelled" || appointment.status === "completed" || appointment.status === "confirmed") && (
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center gap-2">
                     <span className="text-gray-500">{getActionTime()}</span>
                     <span className="text-gray-500">{getActionUserName()}</span>
                   </div>
@@ -878,183 +925,216 @@ const Dashboard = () => {
             </div>
           </div>
 
-          <div className="flex space-x-2">
-            {/* Only show buttons if appointment is not completed */}
-            {appointment.status !== "completed" && (
-              <>
-                {/* Doctor buttons (Only for Pending) */}
-                {isDoctor && appointment.status === "pending" && (
-                  <div className="flex space-x-2">
-                    {/* Complete Button */}
+          {/* Review Section for Patients (Completed Appointments) */}
+          {!isDoctor && appointment.status === "completed" && (
+            <div className="mt-4 pt-4 border-t border-gray-200">
+              {!showReviewForm ? (
+                <button
+                  onClick={() => setShowReviewForm(true)}
+                  className="px-2 py-1 bg-blue-500 text-white text-xs rounded-md hover:bg-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+                >
+                  Leave a Rating
+                </button>
+              ) : (
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-700 mb-2">Your Rating:</h4>
+                  <div className="flex items-center gap-1 mb-2">
+                    {[...Array(5)].map((_, index) => (
+                      <FaStar
+                        key={index}
+                        className={`w-4 h-4 cursor-pointer transition-colors ${index < rating ? "text-yellow-400" : "text-gray-300 hover:text-yellow-300"}`}
+                        onClick={() => handleRatingChange(index + 1)}
+                      />
+                    ))}
+                    {rating > 0 && <span className="text-sm text-gray-600 ml-2">({rating} Star{rating > 1 && 's'})</span>}
+                  </div>
+                  <div className="flex gap-1">
                     <button
-                      onClick={async () => {
-                        try {
-                          const token = localStorage.getItem("token");
-                          const response = await axios.post(
-                            `http://localhost:5001/api/appointments/${appointment._id}/confirm`,
-                            { status: "confirmed" },
-                            { headers: { Authorization: `Bearer ${token}` } }
-                          );
-
-                          if (response.data.success) {
-                            setAppointments((prevAppointments) =>
-                              prevAppointments.map((apt) =>
-                                apt._id === appointment._id ? { ...apt, status: "confirmed" } : apt
-                              )
-                            );
-                            fetchAppointments();
-                            toast.success("Appointment confirmed!");
-                          }
-                        } catch (error) {
-                          console.error("Error:", error);
-                          toast.error("Failed to confirm appointment.");
-                        }
-                      }}
-                      className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs rounded-md transition-colors flex items-center"
+                      onClick={handleSubmitReview}
+                      disabled={isSubmittingReview || rating === 0}
+                      className={`px-2 py-1 text-xs rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 ${isSubmittingReview || rating === 0 ? "bg-gray-400 cursor-not-allowed" : "bg-green-600 hover:bg-green-700 text-white"}`}
                     >
-                      <FaCheck className="mr-1 text-xs" />
-                      <span>Confirm</span>
+                      {isSubmittingReview ? "Submitting..." : "Submit Rating"}
                     </button>
+                    <button
+                      onClick={() => { setShowReviewForm(false); setRating(0); }}
+                      disabled={isSubmittingReview}
+                      className="px-2 py-1 text-xs rounded-md border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-opacity-50"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
-                    {/* Cancel Button */}
+          {/* Action Buttons */}
+          {/* Hide action buttons if review form is shown and it's a patient */}
+          {!(showReviewForm && !isDoctor) && appointment.status !== "completed" && (
+            <div className="flex flex-wrap gap-1 mt-4 sm:mt-0">
+              {/* Doctor buttons */}
+              {isDoctor && appointment.status === "pending" && (
+                <div className="flex flex-wrap gap-1">
+                  <button
+                    onClick={async () => {
+                      try {
+                        const token = localStorage.getItem("token");
+                        const response = await axios.post(
+                          `http://localhost:5001/api/appointments/${appointment._id}/confirm`,
+                          { status: "confirmed" },
+                          { headers: { Authorization: `Bearer ${token}` } }
+                        );
+
+                        if (response.data.success) {
+                          setAppointments((prevAppointments) =>
+                            prevAppointments.map((apt) =>
+                              apt._id === appointment._id ? { ...apt, status: "confirmed" } : apt
+                            )
+                          );
+                          fetchAppointments();
+                          toast.success("Appointment confirmed!");
+                        }
+                      } catch (error) {
+                        console.error("Error:", error);
+                        toast.error("Failed to confirm appointment.");
+                      }
+                    }}
+                    className="px-2 py-1 text-white text-xs rounded-md transition-colors flex items-center whitespace-nowrap bg-green-600 hover:bg-green-700"
+                  >
+                    <FaCheck className="mr-1 text-xs" />
+                    <span>Confirm</span>
+                  </button>
+
+                  <button
+                    onClick={() => cancelAppointment(appointment._id)}
+                    className="px-2 py-1 bg-red-500 text-white text-xs rounded-md hover:bg-red-600 transition-colors flex items-center whitespace-nowrap"
+                  >
+                    <FaTimes className="mr-1 text-xs" />
+                    Cancel
+                  </button>
+                </div>
+              )}
+
+              {/* Patient Buttons */}
+              {!isDoctor && (
+                <div className="flex flex-wrap gap-1 mt-4 sm:mt-0">
+                  {/* Patient Cancel Button (Only for Pending) */}
+                  {appointment.status === "pending" && (
                     <button
                       onClick={() => cancelAppointment(appointment._id)}
-                      className="px-3 py-1.5 bg-red-500 text-white text-xs rounded-md hover:bg-red-600 transition-colors flex items-center"
+                      className="px-2 py-1 bg-red-500 text-white text-xs rounded-md hover:bg-red-600 transition-colors flex items-center whitespace-nowrap"
                     >
                       <FaTimes className="mr-1 text-xs" />
                       Cancel
                     </button>
-                  </div>
-                )}
+                  )}
 
-                {/* Patient Buttons */}
-                {!isDoctor && (
-                  <div className="flex space-x-2">
-                    {/* Patient Cancel Button (Only for Pending) */}
-                    {appointment.status === "pending" && (
-                      <button
-                        onClick={() => cancelAppointment(appointment._id)}
-                        className="px-3 py-1.5 bg-red-500 text-white text-xs rounded-md hover:bg-red-600 transition-colors flex items-center"
-                      >
-                        <FaTimes className="mr-1 text-xs" />
-                        Cancel
-                      </button>
-                    )}
+                  {/* Pay Now Button (Only when Confirmed) */}
+                  {appointment.status === "confirmed" && !isProcessing && (
+                    <button
+                      onClick={async () => {
+                        console.log("Pay Now button clicked");
+                        console.log("Current appointment status:", appointment.status);
+                        console.log("Current payment status:", appointment.paymentStatus);
+                        
+                        setIsProcessing(true);
+                        console.log("isProcessing set to true");
 
-                    {/* Pay Now Button (Only when Confirmed) */}
-                    <>
-                      {appointment.status === "confirmed" && !isProcessing && (
-                        <button
-                          onClick={async () => {
-                            setIsProcessing(true);
+                        setTimeout(async () => {
+                          try {
+                            console.log("Starting payment process");
+                            const token = localStorage.getItem("token");
+                            const response = await axios.post(
+                              `http://localhost:5001/api/appointments/${appointment._id}/pay`,
+                              {
+                                paymentStatus: "paid",
+                                status: "completed"
+                              },
+                              {
+                                headers: {
+                                  Authorization: `Bearer ${token}`,
+                                },
+                              }
+                            );
 
-                            setTimeout(async () => {
-                              try {
-                                const token = localStorage.getItem("token");
-                                const response = await axios.post(
-                                  `http://localhost:5001/api/appointments/${appointment._id}/pay`,
-                                  {
-                                    paymentStatus: "paid",
-                                    status: "completed",
-                                  },
-                                  {
-                                    headers: {
-                                      Authorization: `Bearer ${token}`,
-                                    },
-                                  }
-                                );
+                            console.log("Payment API response:", response.data);
 
-                                if (response.data.success) {
-                                  // Create notifications for both doctor and patient
-                                  const doctorNotification = {
-                                    id: Date.now(),
-                                    type: "completed",
-                                    message: `Appointment with ${appointment.patientId.firstName} ${appointment.patientId.lastName} has been completed`,
-                                    timestamp: new Date(),
-                                    appointmentDate: appointment.slotDate,
-                                    recipientType: "doctor",
-                                    recipientId: appointment.docId._id,
-                                  };
+                            if (response.data.success) {
+                              console.log("Payment successful, updating notifications");
+                              // Create notifications for both doctor and patient
+                              const doctorNotification = {
+                                id: Date.now(),
+                                type: "completed",
+                                message: `Appointment with ${appointment.patientId.firstName} ${appointment.patientId.lastName} has been completed`,
+                                timestamp: new Date(),
+                                appointmentDate: appointment.slotDate,
+                                recipientType: "doctor",
+                                recipientId: appointment.docId._id,
+                              };
 
-                                  const patientNotification = {
-                                    id: Date.now() + 1,
-                                    type: "completed",
-                                    message: `Your appointment with Dr. ${appointment.docId.firstName} ${appointment.docId.lastName} has been completed`,
-                                    timestamp: new Date(),
-                                    appointmentDate: appointment.slotDate,
-                                    recipientType: "patient",
-                                    recipientId: appointment.patientId._id,
-                                  };
+                              const patientNotification = {
+                                id: Date.now() + 1,
+                                type: "completed",
+                                message: `Your appointment with Dr. ${appointment.docId.firstName} ${appointment.docId.lastName} has been completed`,
+                                timestamp: new Date(),
+                                appointmentDate: appointment.slotDate,
+                                recipientType: "patient",
+                                recipientId: appointment.patientId._id,
+                              };
 
-                                  // Get existing notifications from localStorage
-                                  const savedNotifications = localStorage.getItem("notifications");
-                                  let updatedNotifications = [];
-                                  
-                                  if (savedNotifications) {
-                                    try {
-                                      updatedNotifications = JSON.parse(savedNotifications);
-                                    } catch (error) {
-                                      console.error("Error parsing saved notifications:", error);
-                                      updatedNotifications = [];
-                                    }
-                                  }
-
-                                  // Add new notifications
-                                  updatedNotifications.unshift(doctorNotification);
-                                  updatedNotifications.unshift(patientNotification);
-
-                                  // Save back to localStorage
-                                  localStorage.setItem("notifications", JSON.stringify(updatedNotifications));
-                                  setAppointments((prevAppointments) =>
-                                    prevAppointments.map((apt) =>
-                                      apt._id === appointment._id
-                                        ? { ...apt, status: "completed", paymentStatus: "paid" }
-                                        : apt
-                                    )
-                                  );
-                                  fetchAppointments();
-                                  toast.success("Payment successful! Appointment completed.");
+                              // Get existing notifications from localStorage
+                              const savedNotifications = localStorage.getItem("notifications");
+                              let updatedNotifications = [];
+                              
+                              if (savedNotifications) {
+                                try {
+                                  updatedNotifications = JSON.parse(savedNotifications);
+                                } catch (error) {
+                                  console.error("Error parsing saved notifications:", error);
+                                  updatedNotifications = [];
                                 }
-                              } catch (error) {
                               }
 
-                              setIsProcessing(false);
-                            }, 3000);
-                          }}
-                          className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs rounded-md transition-colors flex items-center"
-                        >
-                          <FaCreditCard className="mr-1 text-xs" />
-                          <span>Pay Now</span>
-                        </button>
-                      )}
+                              // Add new notifications
+                              updatedNotifications.unshift(doctorNotification);
+                              updatedNotifications.unshift(patientNotification);
 
-                      {/* Payment Processing Box */}
-                      {isProcessing && (
-                        <div className="fixed inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm z-50">
-                          <div className="bg-white p-6 rounded-xl w-80 text-center shadow-sm">
-                            <div className="flex flex-col items-center">
-                              <div className="w-12 h-12 bg-green-50 rounded-full flex items-center justify-center mb-4">
-                                <FaCreditCard className="text-green-500 text-xl" />
-                              </div>
-                              <h2 className="text-lg font-medium text-gray-800 mb-2">Processing Payment</h2>
-                              <div className="w-16 h-16 border-4 border-green-500/20 border-t-green-500 rounded-full animate-spin mb-4"></div>
-                              <div className="space-y-2">
-                                <p className="text-sm text-gray-600">Please wait while we process your payment</p>
-                                <div className="flex items-center justify-center space-x-2 text-xs text-gray-500">
-                                  <FaExternalLinkAlt className="text-gray-400" />
-                                  <span>Demo Payment Mode</span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
+                              // Save back to localStorage
+                              localStorage.setItem("notifications", JSON.stringify(updatedNotifications));
+                              console.log("Notifications updated");
+
+                              setAppointments((prevAppointments) =>
+                                prevAppointments.map((apt) =>
+                                  apt._id === appointment._id
+                                    ? { ...apt, status: "completed", paymentStatus: "paid" }
+                                    : apt
+                                )
+                              );
+                              console.log("Appointments state updated");
+                              
+                              fetchAppointments();
+                              toast.success("Payment successful! Appointment completed.");
+                            }
+                          } catch (error) {
+                            console.error("Payment error:", error);
+                            toast.error("Failed to process payment");
+                          } finally {
+                            console.log("Setting isProcessing to false");
+                            setIsProcessing(false);
+                          }
+                        }, 3000);
+                      }}
+                      className="px-2 py-1 bg-green-600 hover:bg-green-700 text-white text-xs rounded-md transition-colors flex items-center whitespace-nowrap"
+                    >
+                      <FaCreditCard className="mr-1 text-xs" />
+                      <span>Pay Now</span>
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </motion.div>
     );
@@ -1152,7 +1232,7 @@ const Dashboard = () => {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-custom-light-blue via-custom-light-teal to-custom-light-cyan p-6">
+    <div className="min-h-screen bg-gradient-to-br from-custom-light-blue via-custom-light-teal to-custom-light-cyan p-6 pt-24">
     <Toaster
         position="top-right"
         toastOptions={{
@@ -1202,10 +1282,10 @@ const Dashboard = () => {
             </div>
             <button
               onClick={() => setShowQuickActions(!showQuickActions)}
-              className="px-4 py-2 bg-white text-gray-800 rounded-lg hover:bg-gray-50 transition-colors flex items-center space-x-2 shadow-sm border border-gray-200"
+              className="px-3 sm:px-4 py-2 bg-white text-gray-800 rounded-lg hover:bg-gray-50 transition-colors flex items-center space-x-2 shadow-sm border border-gray-200 text-sm sm:text-base"
             >
-              <FaChartLine className="text-blue-500" />
-              <span className="font-medium">Quick Actions</span>
+              <FaChartLine className="text-blue-500 text-sm sm:text-base" />
+              <span className="font-medium whitespace-nowrap">Quick Actions</span>
             </button>
           </div>
         </div>
@@ -1352,21 +1432,21 @@ const Dashboard = () => {
                     ? "Patient Appointments"
                     : "My Appointments"}
                 </h2>
-                <div className="flex flex-wrap gap-4 w-full md:w-auto">
-                  <div className="relative flex-1 md:flex-none">
+                <div className="flex flex-col sm:flex-row gap-4 w-full">
+                  <div className="relative flex-1">
                     <input
                       type="text"
                       placeholder="Search appointments..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
-                    <FaSearch className="absolute right-3 top-3 text-gray-400" />
+                    <FaSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm sm:text-base" />
                   </div>
                   <select
                     value={filterStatus}
                     onChange={(e) => setFilterStatus(e.target.value)}
-                    className="px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="px-3 sm:px-4 py-2 text-sm sm:text-base rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="all">All Status</option>
                     <option value="pending">Pending</option>
@@ -1377,7 +1457,7 @@ const Dashboard = () => {
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
-                    className="px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="px-3 sm:px-4 py-2 text-sm sm:text-base rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="date">Sort by Date</option>
                     <option value="name">Sort by Name</option>
@@ -1403,19 +1483,44 @@ const Dashboard = () => {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {sortedAppointments.map((appointment) => (
-                    <AppointmentCard
-                      key={appointment._id}
-                      appointment={appointment}
-                      role={role}
-                    />
-                  ))}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {sortedAppointments.map((appointment) => (
+                      <AppointmentCard
+                        key={appointment._id}
+                        appointment={appointment}
+                        role={role}
+                        fetchAppointments={fetchAppointments}
+                      />
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
           </div>
         </div>
       </div>
+
+      {/* Payment Processing Box - Moved outside the appointment card */}
+      {isProcessing && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm z-50">
+          <div className="bg-white p-6 rounded-xl w-80 text-center shadow-sm">
+            <div className="flex flex-col items-center">
+              <div className="w-12 h-12 bg-green-50 rounded-full flex items-center justify-center mb-4">
+                <FaCreditCard className="text-green-500 text-xl" />
+              </div>
+              <h2 className="text-lg font-medium text-gray-800 mb-2">Processing Payment</h2>
+              <div className="w-16 h-16 border-4 border-green-500/20 border-t-green-500 rounded-full animate-spin mb-4"></div>
+              <div className="space-y-2">
+                <p className="text-sm text-gray-600">Please wait while we process your payment</p>
+                <div className="flex items-center justify-center space-x-2 text-xs text-gray-500">
+                  <FaExternalLinkAlt className="text-gray-400" />
+                  <span>Demo Payment Mode</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

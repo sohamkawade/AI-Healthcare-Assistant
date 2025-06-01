@@ -185,14 +185,14 @@ const Patients = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-custom-light-blue via-custom-light-teal to-custom-light-cyan">
-      <div className="max-w-4xl mx-auto px-4 py-6">
-        <div className="flex items-center justify-between mb-6">
+    <div className="min-h-screen bg-gradient-to-br from-custom-light-blue via-custom-light-teal to-custom-light-cyan py-6 px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 md:pt-28">
+      <div className="max-w-4xl mx-auto">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4 sm:gap-0">
           <h1 className="text-2xl font-bold text-gray-900">My Patients</h1>
-          <div className="relative">
+          <div className="relative w-full sm:w-auto">
             <button
               onClick={() => setShowTimeDropdown(!showTimeDropdown)}
-              className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 shadow-sm"
+              className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 shadow-sm w-full sm:w-auto justify-center sm:justify-start"
             >
               {timeOptions.find(opt => opt.value === timePeriod)?.label}
               <FaChevronDown className="ml-2 text-gray-400" />
@@ -227,7 +227,7 @@ const Patients = () => {
         ) : patients.length > 0 ? (
           <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
             {/* Header */}
-            <div className="grid grid-cols-12 gap-4 px-4 py-3 bg-gray-50 border-b border-gray-200">
+            <div className="hidden md:grid grid-cols-12 gap-4 px-4 py-3 bg-gray-50 border-b border-gray-200">
               <div className="col-span-4">
                 <div className="flex items-center space-x-3">
                   <FaUserMd className="text-blue-500" />
@@ -267,15 +267,15 @@ const Patients = () => {
                 </div>
 
             {/* List */}
-            <div className="divide-y divide-gray-200">
+            <div className="divide-y divide-gray-200 overflow-x-auto">
               {sortedPatients.map((patient) => (
                 <div
                   key={patient._id}
-                  className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-gray-50 transition-colors"
+                  className="grid grid-cols-1 md:grid-cols-12 gap-4 px-4 py-4 hover:bg-gray-50 transition-colors items-center"
                 >
-                  <div className="col-span-4">
+                  <div className="col-span-1 md:col-span-4">
                     <div className="flex items-center space-x-4">
-                      <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-gray-200">
+                      <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-200 flex-shrink-0">
                         <img
                           src={`http://localhost:5001${patient.profilePicture || '/uploads/default-avatar.png'}`}
                           alt={`${patient.firstName} ${patient.lastName}`}
@@ -283,29 +283,33 @@ const Patients = () => {
                         />
                     </div>
                     <div>
-                        <span className="text-base font-medium text-gray-900 block">
+                        <span className="text-sm font-medium text-gray-900 block">
                           {patient.firstName} {patient.lastName}
                         </span>
+                         <span className="md:hidden text-xs text-gray-600 block mt-0.5">
+                          <FaPhone className="inline mr-1"/>{patient.contactNumber || 'N/A'}
+                         </span>
                       </div>
                     </div>
                   </div>
-                  <div className="col-span-3 flex items-center">
-                    <span className="text-base text-gray-700">
+                  <div className="hidden md:flex col-span-3 items-center">
+                    <span className="text-sm text-gray-700">
                       {patient.contactNumber || 'N/A'}
                     </span>
                   </div>
-                  <div className="col-span-3 flex items-center">
-                    <span className="text-base text-gray-700">
-                      {formatDate(patient.lastVisit)}
+                  <div className="col-span-1 md:col-span-3 flex items-center">
+                    <span className="text-sm text-gray-700">
+                      <span className="md:hidden font-medium">Last Visit: </span>{formatDate(patient.lastVisit)}
                     </span>
                   </div>
-                  <div className="col-span-2 flex items-center">
-                    <span className="text-base font-medium text-gray-900">
-                      {patient.visitCount}
+                  <div className="col-span-1 md:col-span-2 flex items-center">
+                    <span className="text-sm font-medium text-gray-900">
+                      <span className="md:hidden font-medium">Visits: </span>{patient.visitCount}
                     </span>
                   </div>
                 </div>
-              ))}
+              ))
+              }
               </div>
           </div>
         ) : (
