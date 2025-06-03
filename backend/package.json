@@ -41,6 +41,7 @@
     "pdfkit": "^0.16.0",
     "react-router-dom": "^6.28.0",
     "react-toastify": "^10.0.6",
+    "serverless-http": "^3.2.0",
     "twilio": "^5.4.0",
     "ws": "^8.18.1"
   }
