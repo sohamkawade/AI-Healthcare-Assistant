@@ -7,7 +7,6 @@ const authenticate = async (req, res, next) => {
     const token = req.header('Authorization')?.replace('Bearer ', '');
     
     if (!token) {
-      console.log('No token provided');
       return res.status(401).json({
         success: false,
         message: 'No authentication token, access denied'
@@ -42,8 +41,6 @@ const authenticate = async (req, res, next) => {
 
     next();
   } catch (error) {
-    console.error('Auth middleware error:', error);
-    console.error('Error stack:', error.stack);
     res.status(401).json({
       success: false,
       message: 'Token is invalid or expired',
