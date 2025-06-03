@@ -1,0 +1,28 @@
+/* src/components/Notification.css */
+.notification {
+    font-family: 'Open Sans', sans-serif;
+  }
+  
+  .notification-success {
+    background-color: #4caf50; /* Green */
+  }
+  
+  .notification-error {
+    background-color: #f44336; /* Red */
+  }
+  
+  .notification-warning {
+    background-color: #ff9800; /* Orange */
+  }
+  
+  .notification-info {
+    background-color: #2196f3; /* Blue */
+  }
+  
+  /* Media queries for responsive design */
+  @media (max-width: 640px) {
+    .notification {
+      font-size: 0.875rem; /* Smaller text for mobile */
+    }
+  }
+  
