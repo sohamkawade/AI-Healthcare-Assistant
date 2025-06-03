@@ -105,7 +105,6 @@ const bookAppointment = async (req, res) => {
       data: newAppointment
     });
   } catch (error) {
-    console.error('Error in bookAppointment:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to book appointment',
@@ -167,7 +166,6 @@ const appointmentsDoctor = async (req, res) => {
       data: appointments
     });
   } catch (error) {
-    console.error('Error fetching doctor appointments:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch doctor appointments',
@@ -245,7 +243,6 @@ const appointmentCancel = async (req, res) => {
       data: appointment
     });
   } catch (error) {
-    console.error("Error cancelling appointment:", error);
     res.status(500).json({
       success: false,
       message: "Failed to cancel appointment",
@@ -324,7 +321,6 @@ const appointmentComplete = async (req, res) => {
       data: appointment
     });
   } catch (error) {
-    console.error('Error completing appointment:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to complete appointment',
@@ -411,7 +407,6 @@ const getAvailableSlots = async (req, res) => {
       data: availableSlots
     });
   } catch (error) {
-    console.error('Error getting available slots:', error);
     return res.status(500).json({
       success: false,
       message: 'Failed to get available slots'
@@ -422,6 +417,10 @@ const getAvailableSlots = async (req, res) => {
 // Auto-cancel past appointments
 const autoCancelPastAppointments = async () => {
   try {
+    if (mongoose.connection.readyState !== 1) {
+      return;
+    }
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -429,7 +428,7 @@ const autoCancelPastAppointments = async () => {
     const pastAppointments = await appointmentModel.find({
       slotDate: { $lt: today },
       status: { $nin: ['cancelled', 'completed'] }
-    });
+    }).maxTimeMS(30000); // Set maximum execution time to 30 seconds
 
     for (const appointment of pastAppointments) {
       // Mark appointment as cancelled while preserving all required fields
@@ -444,7 +443,7 @@ const autoCancelPastAppointments = async () => {
         slotDate: appointment.slotDate,
         slotTime: appointment.slotTime,
         consultationType: appointment.consultationType
-      });
+      }).maxTimeMS(30000);
 
       // Remove the slot from doctor's booked slots
       const doctor = await doctorModel.findById(appointment.docId);
@@ -456,37 +455,64 @@ const autoCancelPastAppointments = async () => {
       }
     }
   } catch (error) {
-    console.error('Error auto-cancelling past appointments:', error);
+    // Retry after 5 minutes if there's an error
+    setTimeout(autoCancelPastAppointments, 5 * 60 * 1000);
   }
 };
 
-// Run auto-cancel every day at midnight
-setInterval(autoCancelPastAppointments, 24 * 60 * 60 * 1000);
-// Run once when server starts
-autoCancelPastAppointments();
+// Wait for MongoDB connection before scheduling auto-cancel
+const scheduleAutoCancel = () => {
+  if (mongoose.connection.readyState === 1) {
+    // Run auto-cancel every day at midnight
+    setInterval(autoCancelPastAppointments, 24 * 60 * 60 * 1000);
+    // Run once when server starts
+    autoCancelPastAppointments();
+  } else {
+    // If not connected, wait 5 seconds and try again
+    setTimeout(scheduleAutoCancel, 5000);
+  }
+};
+
+// Start scheduling when the module is loaded
+scheduleAutoCancel();
 
 // Auto-delete cancelled appointments after 30 days
 const autoDeleteCancelledAppointments = async () => {
   try {
+    // Check if MongoDB is connected
+    if (mongoose.connection.readyState !== 1) {
+      return;
+    }
+
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
     const result = await appointmentModel.deleteMany({
       status: 'cancelled',
       cancelledAt: { $lt: thirtyDaysAgo }
-    });
+    }).maxTimeMS(30000); // Set maximum execution time to 30 seconds
 
-    // Log deletion count
   } catch (error) {
-    console.error('Error in autoDeleteCancelledAppointments:', error);
+    // Retry after 5 minutes if there's an error
+    setTimeout(autoDeleteCancelledAppointments, 5 * 60 * 1000);
   }
 };
 
-// Schedule the auto-delete function to run daily
-setInterval(autoDeleteCancelledAppointments, 24 * 60 * 60 * 1000);
+// Wait for MongoDB connection before scheduling auto-delete
+const scheduleAutoDelete = () => {
+  if (mongoose.connection.readyState === 1) {
+    // Schedule the auto-delete function to run daily
+    setInterval(autoDeleteCancelledAppointments, 24 * 60 * 60 * 1000);
+    // Run initial cleanup
+    autoDeleteCancelledAppointments();
+  } else {
+    // If not connected, wait 5 seconds and try again
+    setTimeout(scheduleAutoDelete, 5000);
+  }
+};
 
-// Run initial cleanup
-autoDeleteCancelledAppointments();
+// Start scheduling when the module is loaded
+scheduleAutoDelete();
 
 // Video consultation handlers
 const handleVideoOffer = async (req, res) => {
@@ -523,7 +549,6 @@ const handleVideoOffer = async (req, res) => {
       message: 'Video offer sent successfully'
     });
   } catch (error) {
-    console.error('Error handling video offer:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to handle video offer'
@@ -565,7 +590,6 @@ const handleVideoAnswer = async (req, res) => {
       message: 'Video answer sent successfully'
     });
   } catch (error) {
-    console.error('Error handling video answer:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to handle video answer'
@@ -614,7 +638,6 @@ const handleIceCandidate = async (req, res) => {
       message: 'ICE candidate stored successfully'
     });
   } catch (error) {
-    console.error('Error handling ICE candidate:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to handle ICE candidate'
@@ -680,7 +703,6 @@ const getPaymentHistory = async (req, res) => {
             data: paymentHistory
         });
     } catch (error) {
-        console.error("Error fetching payment history:", error);
         res.status(500).json({
             success: false,
             message: "Failed to fetch payment history",
@@ -713,7 +735,6 @@ const getPatientDailyAppointmentCount = async (req, res) => {
       count
     });
   } catch (error) {
-    console.error("Error getting patient daily appointment count:", error);
     res.status(500).json({
       success: false,
       message: "Failed to get appointment count",
@@ -754,7 +775,6 @@ const checkTimeSlotAvailability = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Error checking time slot availability:", error);
     return res.status(500).json({
       success: false,
       message: "Failed to check time slot availability",
