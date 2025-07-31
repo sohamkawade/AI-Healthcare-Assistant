@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { 
-  FaUserCircle, 
-  FaBars, 
-  FaTimes, 
-  FaSignOutAlt, 
-  FaUser, 
+import { Link, useNavigate, NavLink } from "react-router-dom";
+import {
+  FaUserCircle,
+  FaBars,
+  FaTimes,
+  FaSignOutAlt,
+  FaUser,
   FaMoneyBillWave,
   FaInfoCircle,
   FaPhoneAlt,
@@ -14,7 +14,7 @@ import {
   FaCalendarAlt,
   FaSignInAlt,
   FaHome,
-  FaChartLine
+  FaChartLine,
 } from "react-icons/fa";
 import logo from "../assets/logo.png";
 import { useAuth } from "../hooks/useAuth";
@@ -30,27 +30,34 @@ const Navbar = () => {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target)) {
+      if (
+        profileDropdownRef.current &&
+        !profileDropdownRef.current.contains(event.target)
+      ) {
         setIsProfileDropdownOpen(false);
       }
-      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target) && !event.target.closest('.mobile-menu-button')) {
+      if (
+        mobileMenuRef.current &&
+        !mobileMenuRef.current.contains(event.target) &&
+        !event.target.closest(".mobile-menu-button")
+      ) {
         setMobileMenuOpen(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   // Prevent body scroll when mobile menu is open
   useEffect(() => {
     if (isMobileMenuOpen) {
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = "unset";
     }
     return () => {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = "unset";
     };
   }, [isMobileMenuOpen]);
 
@@ -104,18 +111,26 @@ const Navbar = () => {
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex space-x-8 items-center ml-20">
-          <Link
+          <NavLink
             to="/about"
-            className="text-black text-lg font-medium hover:text-purple-700 transition duration-300 hover:scale-105 cursor-pointer"
+            className={({isActive}) =>
+              `block py-0.5 pr-4 pl-3 duration-100 ${
+                isActive ? "bg-purple-300 rounded-full" : "text-gray-800"
+              } text-black hover:text-purple-700 text-lg font-medium transition duration-0 hover:scale-105 cursor-pointer`
+            }
           >
             About
-          </Link>
-          <Link
+          </NavLink>
+          <NavLink
             to="/contact"
-            className="text-black text-lg font-medium hover:text-purple-700 transition duration-300 hover:scale-105 cursor-pointer"
+            className={({ isActive }) =>
+              `block py-0.5 pr-4 pl-3 duration-200 ${
+                isActive ? "bg-purple-300 rounded-full" : "text-gray-800"
+              } text-black hover:text-purple-700 text-lg font-medium transition duration-300 hover:scale-105 cursor-pointer`
+            }
           >
             Contact
-          </Link>
+          </NavLink>
 
           <div
             className="relative dropdown"
@@ -141,24 +156,36 @@ const Navbar = () => {
             </div>
           </div>
 
-          <Link
+          <NavLink
             to="/dashboard"
-            className="text-black hover:text-purple-700 text-lg font-medium transition duration-300 hover:scale-105 cursor-pointer"
+            className={({ isActive }) =>
+              `block py-0.5 pr-4 pl-3 duration-200 ${
+                isActive ? "bg-purple-300 rounded-full" : "text-gray-800"
+              } text-black hover:text-purple-700 text-lg font-medium transition duration-300 hover:scale-105 cursor-pointer`
+            }
           >
             Dashboard
-          </Link>
-          <Link
+          </NavLink>
+          <NavLink
             to="/appointment"
-            className="text-black hover:text-purple-700 text-lg font-medium transition duration-300 hover:scale-105 cursor-pointer"
+            className={({ isActive }) =>
+              `block py-0.5 pr-4 pl-3 duration-200 ${
+                isActive ? "bg-purple-300 rounded-full" : "text-gray-800"
+              } text-black hover:text-purple-700 text-lg font-medium transition duration-300 hover:scale-105 cursor-pointer`
+            }
           >
             Appointment
-          </Link>
-          <Link
+          </NavLink>
+          <NavLink
             to="/login"
-            className="text-black hover:text-purple-700 text-lg font-medium transition duration-300 hover:scale-105 cursor-pointer"
+            className={({ isActive }) =>
+              `block py-0.5 pr-4 pl-3 duration-200 ${
+                isActive ? "bg-purple-300 rounded-full" : "text-gray-800"
+              } text-black hover:text-purple-700 text-lg font-medium transition duration-300 hover:scale-105 cursor-pointer`
+            }
           >
             Login
-          </Link>
+          </NavLink>
         </div>
 
         {/* Mobile Menu Button */}
@@ -172,7 +199,10 @@ const Navbar = () => {
         </div>
 
         {/* Profile Section */}
-        <div className="flex items-center space-x-4 relative" ref={profileDropdownRef}>
+        <div
+          className="flex items-center space-x-4 relative"
+          ref={profileDropdownRef}
+        >
           <button
             onClick={handleProfileClick}
             className="text-purple-700 hover:text-purple-900 transition duration-300 flex items-center focus:outline-none"
@@ -206,8 +236,12 @@ const Navbar = () => {
                     </div>
                   )}
                   <div>
-                    <p className="text-sm font-semibold text-gray-900 truncate max-w-[120px]">{user?.firstName} {user?.lastName}</p>
-                    <p className="text-xs text-gray-500 truncate max-w-[120px]">{user?.email}</p>
+                    <p className="text-sm font-semibold text-gray-900 truncate max-w-[120px]">
+                      {user?.firstName} {user?.lastName}
+                    </p>
+                    <p className="text-xs text-gray-500 truncate max-w-[120px]">
+                      {user?.email}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -240,14 +274,14 @@ const Navbar = () => {
 
       {/* Mobile Menu Sidebar */}
       {isMobileMenuOpen && (
-        <div 
+        <div
           ref={mobileMenuRef}
           className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden backdrop-blur-sm"
           onClick={() => setMobileMenuOpen(false)}
         >
-          <div 
+          <div
             className="fixed right-0 top-0 h-full w-72 bg-white shadow-2xl transform transition-all duration-300 ease-in-out"
-            onClick={e => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
           >
             {/* Sidebar Header - Simplified */}
             <div className="p-4 border-b border-gray-100">
