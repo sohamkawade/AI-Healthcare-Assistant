@@ -139,15 +139,15 @@ const Footer = () => {
                 <div className="space-y-2">
                   <div className="flex items-center space-x-3 text-gray-600">
                     <FaMapMarkerAlt className="text-purple-500 flex-shrink-0" />
-                    <span className="text-sm">123 Main St, Anytown, India 12345</span>
+                    <span className="text-sm">Mumbai, India 1508</span>
                   </div>
                   <div className="flex items-center space-x-3 text-gray-600">
                     <FaPhone className="text-purple-500 flex-shrink-0" />
-                    <span className="text-sm">+91 (555) 123-4567</span>
+                    <span className="text-sm">+91 9300000045</span>
                   </div>
                   <div className="flex items-center space-x-3 text-gray-600">
                     <FaEnvelope className="text-purple-500 flex-shrink-0" />
-                    <span className="text-sm">info@aihealthcare.com</span>
+                    <span className="text-sm">sohamkawade23@gmail.com</span>
                   </div>
                 </div>
               </div>
