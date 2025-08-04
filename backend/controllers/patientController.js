@@ -1,5 +1,5 @@
 const Patient = require('../models/Patient');
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const path = require('path');
 const { generateToken } = require("../utils/generateToken");
 const User = require('../models/User');

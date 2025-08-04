@@ -99,11 +99,12 @@ wss.on('connection', (ws, req) => {
 
 // Middleware
 app.use(cors({
-  origin: 'http://localhost:3000',
+  origin: ['http://localhost:3000', 'https://ai-healthcare-assistant.vercel.app'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'withCredentials', 'X-Requested-With', 'headers', 'Origin', 'Accept']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Origin', 'Accept']
 }));
+
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

@@ -1,6 +1,6 @@
 // controllers/doctorController.js
 const Doctor = require('../models/Doctor');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const path = require('path');
 const { generateToken } = require("../utils/generateToken");
 
