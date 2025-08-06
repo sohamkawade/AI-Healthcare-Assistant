@@ -152,7 +152,7 @@ const apiService = {
     if (!token) throw new Error('No token provided. Please log in again.');
 
     try {
-      if (!mongoose.Types.ObjectId.isValid(patientId)) {
+      if (!patientId) {
         throw new Error('Invalid patient ID format');
       }
 

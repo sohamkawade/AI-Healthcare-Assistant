@@ -6,11 +6,9 @@ import {
   FaTimes,
   FaSignOutAlt,
   FaUser,
-  FaMoneyBillWave,
   FaInfoCircle,
   FaPhoneAlt,
   FaVideo,
-  FaPills,
   FaCalendarAlt,
   FaSignInAlt,
   FaHome,
@@ -20,7 +18,7 @@ import logo from "../assets/logo.png";
 import { useAuth } from "../hooks/useAuth";
 
 const Navbar = () => {
-  const { user, setUser, loading, logout } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);

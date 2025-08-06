@@ -61,8 +61,6 @@ export const AuthProvider = ({ children }) => {
     try {
       const storedToken = localStorage.getItem('token');
       const storedUser = localStorage.getItem('user');
-      const storedRole = localStorage.getItem('role');
-      const storedDoctorData = localStorage.getItem('doctorData');
       const loadedNotifications = loadNotifications();
 
       if (storedToken) setToken(storedToken);
@@ -72,7 +70,6 @@ export const AuthProvider = ({ children }) => {
         // Set role based on userType from login response
         setRole(parsedUser.userType || (parsedUser.specialization ? 'doctor' : 'patient'));
       }
-      if (storedDoctorData) setDoctorData(JSON.parse(storedDoctorData));
       setNotifications(loadedNotifications);
     } catch (error) {
       console.error('Error parsing localStorage data:', error);

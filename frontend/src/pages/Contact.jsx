@@ -292,7 +292,7 @@ const Contact = () => {
               Contact Us
             </h1>
             <p className="text-base sm:text-lg text-purple-700 max-w-2xl mx-auto">
-              Have questions? We're here to help. Send us a message and we'll respond as soon as possible.
+              Have questions? We&apos;re here to help. Send us a message and we&apos;ll respond as soon as possible.
             </p>
           </motion.div>
 

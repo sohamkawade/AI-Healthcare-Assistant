@@ -2,17 +2,8 @@ import React, { useState, useEffect } from "react";
 import { toast, Toaster } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
-import {
-  FaCheck,
-  FaTimes,
-  FaCheckCircle,
-  FaTimesCircle,
-  FaCalendarAlt,
-  FaClock,
-  FaVideo,
-  FaUser,
-  FaStar,
-} from "react-icons/fa";
+import axios from "axios";
+import { FaCheck, FaTimes, FaCheckCircle, FaTimesCircle, FaCalendarAlt, FaClock, FaVideo, FaUser, FaStar } from "react-icons/fa";
 import moment from "moment";
 
 // Single toast configuration object
