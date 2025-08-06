@@ -14,7 +14,6 @@ import {
   FaTimes,
   FaMoneyBillWave,
 } from "react-icons/fa";
-import { GraduationCap, HeartPulse } from "lucide-react";
 import { motion } from "framer-motion";
 
 const Profile = () => {
@@ -417,7 +416,7 @@ const Profile = () => {
               transition={{ duration: 0.6 }}
               className="flex items-center bg-purple-50 p-2 rounded-lg shadow-md min-h-[60px]"
             >
-              <HeartPulse className="text-purple-500 w-4 h-4 mr-2" />
+              <FaUserMd className="text-purple-500 w-4 h-4 mr-2" />
               <div className="flex-1">
                 <p className="text-gray-700 text-xs font-medium">
                   Specialization
@@ -443,7 +442,7 @@ const Profile = () => {
               transition={{ duration: 0.6 }}
               className="flex items-center bg-purple-50 p-2 rounded-lg shadow-md min-h-[60px]"
             >
-              <GraduationCap className="text-purple-500 w-4 h-4 mr-2" />
+              <FaEnvelope className="text-purple-500 w-4 h-4 mr-2" />
               <div className="flex-1">
                 <p className="text-gray-700 text-xs font-medium">Degree</p>
                 {isEditing ? (

@@ -2,14 +2,10 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import moment from "moment";
 import axios from "axios";
-import { User } from "lucide-react";
 import {
   FaCalendarAlt,
   FaClock,
   FaTimes,
-  FaBell,
-  FaCheckCircle,
-  FaExclamationTriangle,
   FaCheck,
   FaVideo,
   FaStethoscope,

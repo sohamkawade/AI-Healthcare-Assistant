@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { toast, Toaster } from "react-hot-toast";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import apiService from "../services/apiService";
 import { useAuth } from "../hooks/useAuth";
 import {
   FaCheck,
@@ -51,7 +49,7 @@ const Appointment = () => {
   const [selectedDoctor, setSelectedDoctor] = useState(null);
   const [slotIndex, setSlotIndex] = useState(0);
   const [slotTime, setSlotTime] = useState("");
-  const [availableSlots, setAvailableSlots] = useState([]);
+  const [availableSlots, setAvailableSlots] = useState({});
   const [loading, setLoading] = useState(false);
   const [doctorStatus, setDoctorStatus] = useState({});
   const [selectedDate, setSelectedDate] = useState(null);

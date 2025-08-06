@@ -319,7 +319,7 @@ const ResetPassword = () => {
 
         <div className="text-center mt-6">
           <p className="text-gray-600 font-medium">
-            Didn't receive the OTP?{' '}
+            Didn&apos;t receive the OTP?{' '}
             <button
               onClick={() => navigate('/forgot-password')}
               className="text-purple-600 hover:text-purple-800 transition-all duration-300 transform hover:underline"
