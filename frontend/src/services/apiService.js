@@ -2,7 +2,7 @@ import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 
 
-const API_BASE_URL = "https://ai-healthcare-assistant-1-830q.onrender.com/api";
+const API_BASE_URL = "http://localhost:5001/api";
 
 const apiService = {
   baseHeaders: { 
@@ -67,44 +67,39 @@ const apiService = {
   },
 
   login: async (email, password) => {
-    try {
-      const response = await axios.post(
-        `${API_BASE_URL}/auth/login`,
-        { email, password },
-        {
-          withCredentials: true,
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          }
+    const response = await axios.post(
+      `${API_BASE_URL}/auth/login`,
+      { email, password },
+      {
+        withCredentials: true,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
         }
-      );
-
-      if (response?.data?.success && response?.data?.data?.token) {
-        const token = response.data.data.token;
-        const decodedToken = jwtDecode(token);
-        
-        // Set user data from decoded token
-        const userData = {
-          id: decodedToken.id,
-          email: decodedToken.email,
-          specialization: decodedToken.specialization,
-          role: decodedToken.specialization ? 'doctor' : 'patient'
-        };
-
-        // Update response data with user info
-        response.data.data.user = {
-          ...response.data.data.user,
-          ...userData
-        };
-        
-        return response.data;
       }
-      throw new Error(response?.data?.message || 'Login failed. No token received.');
-    } catch (error) {
-      console.error('Login error:', error);
-      throw error;
+    );
+
+    if (response?.data?.success && response?.data?.data?.token) {
+      const token = response.data.data.token;
+      const decodedToken = jwtDecode(token);
+      
+      // Set user data from decoded token
+      const userData = {
+        id: decodedToken.id,
+        email: decodedToken.email,
+        specialization: decodedToken.specialization,
+        role: decodedToken.specialization ? 'doctor' : 'patient'
+      };
+
+      // Update response data with user info
+      response.data.data.user = {
+        ...response.data.data.user,
+        ...userData
+      };
+      
+      return response.data;
     }
+    throw new Error(response?.data?.message || 'Login failed. No token received.');
   },
 
   getProfile: async () => {
@@ -245,28 +240,20 @@ const apiService = {
 
   // Get appointments for a specific doctor
   getAppointmentsByDoctorId: async (doctorId) => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API_BASE_URL}/appointments/doctor/${doctorId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    const token = localStorage.getItem('token');
+    const response = await axios.get(`${API_BASE_URL}/appointments/doctor/${doctorId}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
   },
 
   // Get appointments for a patient
   getAppointmentsByPatientId: async (patientId) => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API_BASE_URL}/appointments/patient/${patientId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    const token = localStorage.getItem('token');
+    const response = await axios.get(`${API_BASE_URL}/appointments/patient/${patientId}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
   },
 
   // Get a doctor's patients

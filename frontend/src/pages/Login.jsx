@@ -189,7 +189,7 @@ const Login = () => {
         </form>
 
         <p className="text-center mt-3 text-sm text-black font-medium">
-          Don't have an account?{' '}
+          Don&apos;t have an account?{' '}
           <span className="text-blue-700 font-medium">Choose an option to register:</span>
         </p>
 

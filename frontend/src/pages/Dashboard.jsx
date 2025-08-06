@@ -826,10 +826,7 @@ const Dashboard = () => {
       setIsSubmittingReview(true);
       try {
         const token = localStorage.getItem("token");
-        console.log('Full appointment ID:', appointment._id);
         const url = `${API_BASE_URL}/appointments/${appointment._id}/review`;
-        console.log(`Submitting review to: ${url}`);
-        console.log('Request payload:', { rating });
         const response = await axios.post(
           url,
           { rating },
@@ -1033,17 +1030,11 @@ const Dashboard = () => {
                   {/* Pay Now Button (Only when Confirmed) */}
                   {appointment.status === "confirmed" && !isProcessing && (
                     <button
-                      onClick={async () => {
-                        console.log("Pay Now button clicked");
-                        console.log("Current appointment status:", appointment.status);
-                        console.log("Current payment status:", appointment.paymentStatus);
-                        
+                      onClick={async () => {         
                         setIsProcessing(true);
-                        console.log("isProcessing set to true");
 
                         setTimeout(async () => {
                           try {
-                            console.log("Starting payment process");
                             const token = localStorage.getItem("token");
                             const response = await axios.post(
                               `http://localhost:5001/api/appointments/${appointment._id}/pay`,
@@ -1058,10 +1049,8 @@ const Dashboard = () => {
                               }
                             );
 
-                            console.log("Payment API response:", response.data);
 
                             if (response.data.success) {
-                              console.log("Payment successful, updating notifications");
                               // Create notifications for both doctor and patient
                               const doctorNotification = {
                                 id: Date.now(),
@@ -1096,13 +1085,10 @@ const Dashboard = () => {
                                 }
                               }
 
-                              // Add new notifications
                               updatedNotifications.unshift(doctorNotification);
                               updatedNotifications.unshift(patientNotification);
 
-                              // Save back to localStorage
                               localStorage.setItem("notifications", JSON.stringify(updatedNotifications));
-                              console.log("Notifications updated");
 
                               setAppointments((prevAppointments) =>
                                 prevAppointments.map((apt) =>
@@ -1111,7 +1097,6 @@ const Dashboard = () => {
                                     : apt
                                 )
                               );
-                              console.log("Appointments state updated");
                               
                               fetchAppointments();
                               toast.success("Payment successful! Appointment completed.");
@@ -1120,7 +1105,6 @@ const Dashboard = () => {
                             console.error("Payment error:", error);
                             toast.error("Failed to process payment");
                           } finally {
-                            console.log("Setting isProcessing to false");
                             setIsProcessing(false);
                           }
                         }, 3000);
