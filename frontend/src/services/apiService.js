@@ -2,7 +2,8 @@ import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 
 
-const API_BASE_URL = "http://localhost:5001/api";
+// const API_BASE_URL = "http://localhost:5001/api";
+const API_BASE_URL = "https://ai-healthcare-backend.onrender.com/api";
 
 const apiService = {
   baseHeaders: { 
