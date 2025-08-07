@@ -3,34 +3,8 @@ import { toast, Toaster } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import axios from "axios";
-import { FaCheck, FaTimes, FaCheckCircle, FaTimesCircle, FaCalendarAlt, FaClock, FaVideo, FaUser, FaStar } from "react-icons/fa";
-import moment from "moment";
+import { FaCalendarAlt, FaClock, FaStar } from "react-icons/fa";
 
-// Single toast configuration object
-const toastConfig = {
-  duration: 3000,
-  position: "top-right",
-  style: {
-    background: "#fff",
-    color: "#363636",
-    borderRadius: "8px",
-    padding: "12px 24px",
-    fontSize: "14px",
-    fontWeight: "500",
-  },
-  success: {
-    style: {
-      background: "#22C55E",
-      color: "#fff",
-    },
-  },
-  error: {
-    style: {
-      background: "#EF4444",
-      color: "#fff",
-    },
-  },
-};
 
 const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -41,19 +15,14 @@ const Appointment = () => {
   const [slotIndex, setSlotIndex] = useState(0);
   const [slotTime, setSlotTime] = useState("");
   const [availableSlots, setAvailableSlots] = useState({});
-  const [loading, setLoading] = useState(false);
-  const [doctorStatus, setDoctorStatus] = useState({});
   const [selectedDate, setSelectedDate] = useState(null);
   const [consultationType, setConsultationType] = useState("in-person");
-  const { user, userType } = useAuth();
-  const [showPayment, setShowPayment] = useState(false);
-  const [currentAppointment, setCurrentAppointment] = useState(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     const checkAuth = async () => {
       const token = localStorage.getItem("token");
       const userId = localStorage.getItem("userId");
-      const userType = localStorage.getItem("userType");
 
       if (!token || !userId) {
         toast.error(
@@ -111,7 +80,6 @@ const Appointment = () => {
 
   const fetchDoctors = async () => {
     try {
-      setLoading(true);
       const response = await axios.get(
         "http://localhost:5001/api/auth/doctors"
       );
@@ -160,8 +128,6 @@ const Appointment = () => {
           },
         }
       );
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -197,7 +163,6 @@ const Appointment = () => {
   };
   const fetchAvailableSlots = async (docId, date) => {
     try {
-      setLoading(true);
       const token = localStorage.getItem("token");
 
       const response = await axios.get(
@@ -216,14 +181,6 @@ const Appointment = () => {
           [docId]: {
             ...prev?.[docId],
             [date]: slots,
-          },
-        }));
-
-        setDoctorStatus((prev) => ({
-          ...prev,
-          [docId]: {
-            ...prev?.[docId],
-            hasAvailableSlots: slots.length > 0,
           },
         }));
       }
@@ -250,14 +207,10 @@ const Appointment = () => {
           [date]: [],
         },
       }));
-    } finally {
-      setLoading(false);
     }
   };
 
-  const handleConsultationTypeChange = (type) => {
-    setConsultationType(type);
-  };
+
 
   const handleBookAppointment = async () => {
     if (!slotTime || !selectedDoctor || !selectedDate) {
@@ -295,7 +248,6 @@ const Appointment = () => {
     }
 
     try {
-      setLoading(true);
       const token = localStorage.getItem("token");
 
       // Check daily appointment limit
@@ -321,7 +273,6 @@ const Appointment = () => {
             },
           }
         );
-        setLoading(false);
         return;
       }
 
@@ -361,7 +312,6 @@ const Appointment = () => {
             },
           }
         );
-        setLoading(false);
         return;
       }
 
@@ -417,364 +367,10 @@ const Appointment = () => {
           },
         }
       );
-    } finally {
-      setLoading(false);
     }
   };
 
-  const handlePaymentComplete = async () => {
-    try {
-      setShowPayment(false);
-      toast.success("Payment completed successfully!", 
-        {
-          duration: 2000,
-          position: 'top-right',
-          style: {
-            background: '#22C55E',
-            color: '#fff',
-            borderRadius: '8px',
-            padding: '12px 24px',
-            fontSize: '14px',
-            fontWeight: '500',
-          },
-        }
-      );
-      navigate("/dashboard");
-    } catch (error) {
-      toast.error("Failed to process payment", 
-        {
-          duration: 2000,
-          position: 'top-right',
-          style: {
-            background: '#EF4444',
-            color: '#fff',
-            borderRadius: '8px',
-            padding: '12px 24px',
-            fontSize: '14px',
-            fontWeight: '500',
-          },
-        }
-      );
-    }
-  };
 
-  const cancelAppointment = async (appointmentId) => {
-    try {
-      const appointment = appointments.find((apt) => apt._id === appointmentId);
-      if (!appointment) {
-        toast.error("Appointment not found", 
-          {
-            duration: 2000,
-            position: 'top-right',
-            style: {
-              background: '#EF4444',
-              color: '#fff',
-              borderRadius: '8px',
-              padding: '12px 24px',
-              fontSize: '14px',
-              fontWeight: '500',
-            },
-          }
-        );
-        return;
-      }
-
-      // Check if appointment can be cancelled
-      const appointmentTime = new Date(appointment.startTime);
-      const now = new Date();
-      if (appointmentTime < now) {
-        toast.error("Cannot cancel past appointments", 
-          {
-            duration: 2000,
-            position: 'top-right',
-            style: {
-              background: '#EF4444',
-              color: '#fff',
-              borderRadius: '8px',
-              padding: '12px 24px',
-              fontSize: '14px',
-              fontWeight: '500',
-            },
-          }
-        );
-        return;
-      }
-
-      const timeUntilAppointment = appointmentTime - now;
-      const hoursUntilAppointment = timeUntilAppointment / (1000 * 60 * 60);
-
-      if (hoursUntilAppointment < 1) {
-        toast.error(
-          "Cannot cancel appointments less than 1 hour before the scheduled time",
-          {
-            duration: 3000,
-            position: 'top-right',
-            style: {
-              background: '#EF4444',
-              color: '#fff',
-              borderRadius: '8px',
-              padding: '12px 24px',
-              fontSize: '14px',
-              fontWeight: '500',
-            },
-          }
-        );
-        return;
-      }
-
-      if (
-        !window.confirm("Are you sure you want to cancel this appointment?")
-      ) {
-        return;
-      }
-
-      const token = localStorage.getItem("token");
-      const response = await axios.post(
-        `http://localhost:5001/api/appointments/cancel/${appointmentId}`,
-        {
-          reason: "Cancelled by user",
-          cancelledBy: userType,
-          cancelledById: user._id,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      if (response.data.success) {
-        // Update appointments list - filter out cancelled appointment
-        setAppointments((prev) =>
-          prev.filter((apt) => apt._id !== appointmentId)
-        );
-
-        // Create notification for both doctor and patient
-        const cancelledBy =
-          userType === "doctor"
-            ? `Dr. ${user.firstName} ${user.lastName}`
-            : `${user.firstName} ${user.lastName}`;
-
-        const doctorNotification = {
-          id: Date.now() + 1,
-          type: "cancelled",
-          message: `Appointment with ${appointment.patientId.firstName} ${appointment.patientId.lastName} has been cancelled by ${cancelledBy}`,
-          timestamp: new Date(),
-          appointmentDate: appointment.startTime,
-          recipientId: appointment.docId._id,
-        };
-
-        const patientNotification = {
-          id: Date.now() + 2,
-          type: "cancelled",
-          message: `Appointment with Dr. ${appointment.docId.firstName} ${appointment.docId.lastName} has been cancelled by ${cancelledBy}`,
-          timestamp: new Date(),
-          appointmentDate: appointment.startTime,
-          recipientId: appointment.patientId._id,
-        };
-
-        // Update notifications in state and localStorage
-        const updatedNotifications = [...notifications];
-
-        // Add notification based on current user's role
-        if (userType === "doctor" && user._id === appointment.docId._id) {
-          updatedNotifications.unshift(doctorNotification);
-        } else if (
-          userType === "patient" &&
-          user._id === appointment.patientId._id
-        ) {
-          updatedNotifications.unshift(patientNotification);
-        }
-
-        // Store notifications in localStorage
-        localStorage.setItem(
-          "notifications",
-          JSON.stringify(updatedNotifications)
-        );
-        setNotifications(updatedNotifications);
-
-        toast.success("Appointment cancelled successfully", {
-          duration: 2000,
-          position: 'top-right',
-          style: {
-            background: '#22C55E',
-            color: '#fff',
-            borderRadius: '8px',
-            padding: '12px 24px',
-            fontSize: '14px',
-            fontWeight: '500',
-          },
-        });
-      }
-    } catch (error) {
-      console.error("Error cancelling appointment:", error);
-      toast.error(
-        error.response?.data?.message ||
-          "Failed to cancel appointment. Please try again.",
-          {
-            duration: 2000,
-            position: 'top-right',
-            style: {
-              background: '#EF4444',
-              color: '#fff',
-              borderRadius: '8px',
-              padding: '12px 24px',
-              fontSize: '14px',
-              fontWeight: '500',
-            },
-          }
-      );
-    }
-  };
-
-  const completeAppointment = async (appointmentId) => {
-    try {
-      const appointment = appointments.find((apt) => apt._id === appointmentId);
-      if (!appointment) {
-        toast.error("Appointment not found", 
-          {
-            duration: 2000,
-            position: 'top-right',
-            style: {
-              background: '#EF4444',
-              color: '#fff',
-              borderRadius: '8px',
-              padding: '12px 24px',
-              fontSize: '14px',
-              fontWeight: '500',
-            },
-          }
-        );
-        return;
-      }
-
-      // Check if appointment can be completed
-      const appointmentTime = new Date(appointment.startTime);
-      const now = new Date();
-      const timeDifference = now - appointmentTime;
-      const minutesDifference = Math.floor(timeDifference / (1000 * 60));
-
-      if (minutesDifference < 0) {
-        toast.error(
-          "Cannot complete an appointment before it starts",
-          {
-            duration: 2000,
-            position: 'top-right',
-            style: {
-              background: '#EF4444',
-              color: '#fff',
-              borderRadius: '8px',
-              padding: '12px 24px',
-              fontSize: '14px',
-              fontWeight: '500',
-            },
-          }
-        );
-        return;
-      }
-
-      if (minutesDifference > 15) {
-        toast.error(
-          "Cannot complete an appointment more than 15 minutes after the scheduled time",
-          {
-            duration: 2000,
-            position: 'top-right',
-            style: {
-              background: '#EF4444',
-              color: '#fff',
-              borderRadius: '8px',
-              padding: '12px 24px',
-              fontSize: '14px',
-              fontWeight: '500',
-            },
-          }
-        );
-        return;
-      }
-
-      if (
-        !window.confirm(
-          "Are you sure you want to mark this appointment as completed?"
-        )
-      ) {
-        return;
-      }
-
-      const token = localStorage.getItem("token");
-      const response = await axios.post(
-        `http://localhost:5001/api/appointments/complete/${appointmentId}`,
-        {
-          completedAt: new Date().toISOString(),
-          completedBy: userType,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      if (response.data.success) {
-        // Update appointments list
-        setAppointments((prev) =>
-          prev.map((apt) =>
-            apt._id === appointmentId ? { ...apt, status: "completed" } : apt
-          )
-        );
-
-        // Add to notifications
-        const newNotification = {
-          id: Date.now(),
-          type: "completed",
-          message:
-            userType === "doctor"
-              ? `Appointment with ${appointment.patientId.firstName} ${appointment.patientId.lastName} has been completed by Dr. ${user.firstName} ${user.lastName}`
-              : `Appointment with Dr. ${appointment.docId.firstName} ${appointment.docId.lastName} has been completed by ${user.firstName} ${user.lastName}`,
-          timestamp: new Date(),
-          appointmentDate: appointment.startTime,
-          recipientId: appointment.docId._id,
-        };
-
-        // Update notifications in state and localStorage
-        const updatedNotifications = [...notifications];
-        updatedNotifications.unshift(newNotification);
-        localStorage.setItem(
-          "notifications",
-          JSON.stringify(updatedNotifications)
-        );
-        setNotifications(updatedNotifications);
-
-        toast.success("Appointment completed successfully", 
-          {
-            duration: 2000,
-            position: 'top-right',
-            style: {
-              background: '#22C55E',
-              color: '#fff',
-              borderRadius: '8px',
-              padding: '12px 24px',
-              fontSize: '14px',
-              fontWeight: '500',
-            },
-          }
-        );
-      }
-    } catch (error) {
-      console.error("Error completing appointment:", error);
-      toast.error(
-        error.response?.data?.message ||
-          "Failed to complete appointment. Please try again.",
-          {
-            duration: 2000,
-            position: 'top-right',
-            style: {
-              background: '#EF4444',
-              color: '#fff',
-              borderRadius: '8px',
-              padding: '12px 24px',
-              fontSize: '14px',
-              fontWeight: '500',
-            },
-          }
-      );
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-custom-light-blue via-custom-light-teal to-custom-light-cyan p-6 pt-20 sm:pt-24 md:pt-28">

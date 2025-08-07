@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { FaDownload, FaEdit, FaTrashAlt, FaPlus, FaSearch } from "react-icons/fa";
+import {FaEdit, FaTrashAlt, FaPlus, FaSearch } from "react-icons/fa";
 import { GiMedicines, GiHospital } from "react-icons/gi";
 import "tailwindcss/tailwind.css";
 import { useAuth } from "../hooks/useAuth";
@@ -103,6 +103,47 @@ const PatientHealthRecord = () => {
   const handleCancel = () => {
     setNewRecord({ title: "", description: "", date: "", file: "" });
     setIsAdding(false);
+  };
+
+  const handleEdit = async (recordId) => {
+    try {
+      const record = records.find(r => r.id === recordId);
+      if (record) {
+        setNewRecord({
+          id: record.id,
+          title: record.title,
+          description: record.description,
+          date: record.date,
+          file: record.file
+        });
+        setIsAdding(true);
+      }
+    } catch (error) {
+      console.error("Error preparing edit:", error);
+      toast.error("Error preparing record for edit. Please try again.", {
+        position: "top-right",
+        autoClose: 5000,
+      });
+    }
+  };
+
+  const handleDelete = async (recordId) => {
+    if (window.confirm("Are you sure you want to delete this record?")) {
+      try {
+        await apiService.deleteRecord(recordId);
+        setRecords(records.filter(r => r.id !== recordId));
+        toast.success("Record deleted successfully!", {
+          position: "top-right",
+          autoClose: 5000,
+        });
+      } catch (error) {
+        console.error("Error deleting record:", error);
+        toast.error("Error deleting record. Please try again.", {
+          position: "top-right",
+          autoClose: 5000,
+        });
+      }
+    }
   };
 
   const filteredRecords = records.filter(

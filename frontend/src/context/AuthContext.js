@@ -56,20 +56,20 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('notifications');
   };
 
-  // Load initial data from localStorage
   useEffect(() => {
     try {
       const storedToken = localStorage.getItem('token');
       const storedUser = localStorage.getItem('user');
+      const storedRole = localStorage.getItem('role');
       const loadedNotifications = loadNotifications();
 
       if (storedToken) setToken(storedToken);
       if (storedUser) {
         const parsedUser = JSON.parse(storedUser);
         setUser(parsedUser);
-        // Set role based on userType from login response
         setRole(parsedUser.userType || (parsedUser.specialization ? 'doctor' : 'patient'));
       }
+      if (storedRole) setRole(storedRole);
       setNotifications(loadedNotifications);
     } catch (error) {
       console.error('Error parsing localStorage data:', error);
@@ -78,7 +78,6 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  // Save data to localStorage whenever it changes
   useEffect(() => {
     if (token) localStorage.setItem('token', token);
     if (user) {

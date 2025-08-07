@@ -1,7 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaVideoSlash } from 'react-icons/fa';
-import { toast } from 'react-hot-toast';
 
 const VideoConsultation = () => {
   const navigate = useNavigate();

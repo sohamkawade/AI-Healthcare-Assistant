@@ -12,31 +12,17 @@ import {
   FaUser,
   FaChartLine,
   FaNotesMedical,
-  FaFileMedicalAlt,
-  FaCalendarPlus,
   FaSearch,
-  FaFilter,
-  FaSort,
-  FaUserMd,
-  FaUserInjured,
-  FaPills,
-  FaHeartbeat,
-  FaThermometerHalf,
-  FaWeight,
-  FaTint,
   FaPrescriptionBottleAlt,
-  FaChevronDown,
   FaHospitalUser,
-  FaClipboardList,
   FaFileAlt,
   FaCalendarCheck,
   FaRobot,
   FaExternalLinkAlt,
   FaCreditCard,
-  FaMoneyBillWave,
   FaStar,
 } from "react-icons/fa";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useAuth } from "../hooks/useAuth";
 import { Toaster, toast } from "react-hot-toast";
 import apiService from "../services/apiService";
@@ -52,11 +38,6 @@ const Dashboard = () => {
   const [filterStatus, setFilterStatus] = useState("all");
   const [sortBy, setSortBy] = useState("date");
   const [showQuickActions, setShowQuickActions] = useState(false);
-  const [patientCount, setPatientCount] = useState(0);
-  const [prescriptions, setPrescriptions] = useState([]);
-  const [showCards, setShowCards] = useState(false);
-  const [quickActionsLoading, setQuickActionsLoading] = useState(false);
-  const [paymentHistory, setPaymentHistory] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
 
   // Check authentication and role
@@ -192,6 +173,7 @@ const Dashboard = () => {
         const processedAppointments = allAppointments.map((appointment) => {
           // For cancelled appointments, ensure we have all necessary information
           if (appointment.status === "cancelled") {
+            // Additional processing for cancelled appointments can be added here
           }
 
           return {
@@ -246,8 +228,6 @@ const Dashboard = () => {
           const savedTime = new Date(timestamp);
           const now = new Date();
           const timeDiff = now.getTime() - savedTime.getTime();
-          const hoursDiff = timeDiff / (1000 * 60 * 60);
-
 
           // Only use saved appointments if they're less than 24 hours old
           if (timeDiff < 24 * 60 * 60 * 1000) {
@@ -260,7 +240,6 @@ const Dashboard = () => {
         } catch (error) {
           console.error("Error parsing saved appointments:", error);
         }
-      } else {
       }
     };
 
@@ -283,277 +262,14 @@ const Dashboard = () => {
       if (!user?._id || !role) return;
 
       try {
-        setQuickActionsLoading(true);
-        const token = localStorage.getItem("token");
-
-        if (role === "doctor") {
-          const [patientResponse, prescriptionResponse] = await Promise.all([
-            axios.get(`${API_BASE_URL}/patients/count/${user._id}`, {
-              headers: { Authorization: `Bearer ${token}` },
-            }),
-            axios.get(`${API_BASE_URL}/prescriptions/doctor`, {
-              headers: { Authorization: `Bearer ${token}` },
-            }),
-          ]);
-
-          setPatientCount(patientResponse.data.count || 0);
-        } else if (role === "patient") {
-          const prescriptionResponse = await axios.get(
-            `${API_BASE_URL}/prescriptions/patient/${user._id}`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          );
-        }
+        // Quick actions data fetching logic can be added here if needed
       } catch (error) {
         console.error("Error fetching quick actions data:", error);
-        toast.error("Failed to fetch data");
-      } finally {
-        setQuickActionsLoading(false);
       }
     };
 
     fetchQuickActionsData();
   }, [user, role]);
-
-  const checkAppointmentStatus = (appointment) => {
-    const appointmentDateTime = new Date(appointment.startTime);
-    const [hours, minutes] = appointment.appointmentTime.split(":");
-    appointmentDateTime.setHours(parseInt(hours), parseInt(minutes));
-
-    const now = new Date();
-    const timeDifference = now - appointmentDateTime;
-    const minutesDifference = Math.floor(timeDifference / (1000 * 60));
-
-    return {
-      isPast: timeDifference > 0,
-      isWithinCompletionWindow:
-        minutesDifference >= 0 && minutesDifference <= 60,
-      isFuture: timeDifference < 0,
-      minutesDifference: minutesDifference,
-    };
-  };
-
-  // Update the canComplete function for doctors
-  const canComplete = (appointment) => {
-    if (!appointment || role !== "doctor") return false;
-
-    // Check if appointment is confirmed
-    if (appointment.status !== "confirmed") return false;
-
-    // Calculate time difference
-    const appointmentDateTime = new Date(appointment.slotDate);
-    const [hours, minutes] = appointment.slotTime.split(":");
-    appointmentDateTime.setHours(parseInt(hours), parseInt(minutes));
-
-    const now = new Date();
-    const timeDiffMinutes = (now - appointmentDateTime) / (1000 * 60);
-
-    // Enable complete button only after 15 minutes from appointment time
-    return timeDiffMinutes >= 15;
-  };
-
-  const shouldShowCompleteButton = (appointment) => {
-    return (
-      role === "doctor" &&
-      (appointment.status === "confirmed" || appointment.status === "pending")
-    );
-  };
-
-  const getCompleteButtonTooltip = (appointment) => {
-    if (!appointment || role !== "doctor") return "";
-
-    if (appointment.status === "pending") {
-      return "Appointment must be confirmed before completion";
-    }
-
-    const appointmentDateTime = new Date(appointment.slotDate);
-    const [hours, minutes] = appointment.slotTime.split(":");
-    appointmentDateTime.setHours(parseInt(hours), parseInt(minutes));
-
-    const now = new Date();
-    const timeDiffMinutes = (now - appointmentDateTime) / (1000 * 60);
-
-    if (timeDiffMinutes < 0) {
-      return "Cannot complete appointment before scheduled time";
-    } else if (timeDiffMinutes < 15) {
-      const remainingMinutes = Math.ceil(15 - timeDiffMinutes);
-      return `Complete button will be enabled in ${remainingMinutes} minute${
-        remainingMinutes !== 1 ? "s" : ""
-      }`;
-    } else {
-      return "Appointment can be completed now";
-    }
-  };
-
-  const completeAppointment = async (appointmentId) => {
-    try {
-      const appointment = appointments.find((apt) => apt._id === appointmentId);
-      if (!appointment) {
-        toast.error("Appointment not found");
-        return;
-      }
-  
-      // Check if appointment can be marked as completed
-      const appointmentDateTime = new Date(appointment.slotDate);
-      const [hours, minutes] = appointment.slotTime.split(":");
-      appointmentDateTime.setHours(parseInt(hours), parseInt(minutes));
-  
-      const now = new Date();
-      if (appointmentDateTime > now) {
-        toast.error("Cannot complete appointments before the scheduled time");
-        return;
-      }
-  
-      if (
-        !window.confirm("Are you sure you want to mark this appointment as completed?")
-      ) {
-        return;
-      }
-  
-      // Create completion details based on user role
-      const completerName =
-        role === "doctor"
-          ? `Dr. ${user.firstName} ${user.lastName}`.trim()
-          : `${user.firstName} ${user.lastName}`.trim();
-  
-      const completionDetails = {
-        completedBy: role,
-        completedById: user._id,
-        completedAt: new Date().toISOString(),
-        completerName: completerName,
-        status: "completed", // Explicitly set status
-      };
-  
-      // Create the updated appointment object with completion details
-      const updatedAppointment = {
-        ...appointment,
-        status: "completed",
-        completedBy: role,
-        completedById: user._id,
-        completedAt: new Date().toISOString(),
-        completerName: completerName,
-        paymentStatus:
-          appointment.paymentStatus === "pending" ? "paid" : appointment.paymentStatus,
-        docId: {
-          ...appointment.docId,
-          _id: appointment.docId._id,
-          firstName: appointment.docId.firstName,
-          lastName: appointment.docId.lastName,
-        },
-        patientId: {
-          ...appointment.patientId,
-          _id: appointment.patientId._id,
-          firstName: appointment.patientId.firstName,
-          lastName: appointment.patientId.lastName,
-        },
-      };
-  
-      // Update state immediately for better UX
-      setAppointments((prevAppointments) =>
-        prevAppointments.map((apt) =>
-          apt._id === appointmentId ? updatedAppointment : apt
-        )
-      );
-  
-      // Update localStorage immediately
-      const savedAppointmentsStr = localStorage.getItem("appointments");
-      if (savedAppointmentsStr) {
-        try {
-          const { data } = JSON.parse(savedAppointmentsStr);
-          const updatedSavedAppointments = data.map((apt) =>
-            apt._id === appointmentId ? updatedAppointment : apt
-          );
-  
-          localStorage.setItem(
-            "appointments",
-            JSON.stringify({
-              data: updatedSavedAppointments,
-              timestamp: new Date().toISOString(),
-            })
-          );
-  
-        } catch (error) {
-          console.error("Error updating localStorage:", error);
-        }
-      }
-  
-      // Make the API call
-      const token = localStorage.getItem("token");
-      const response = await axios.post(
-        `${API_BASE_URL}/appointments/complete/${appointmentId}`,
-        completionDetails,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-  
-      if (response.data.success) {
-        // Create notifications for both doctor and patient
-        const doctorNotification = {
-          id: Date.now(),
-          type: "completed",
-          message: `Appointment with ${appointment.patientId.firstName} ${appointment.patientId.lastName} has been completed`,
-          timestamp: new Date(),
-          appointmentDate: appointment.slotDate,
-          recipientType: "doctor",
-          recipientId: appointment.docId._id,
-        };
-
-        const patientNotification = {
-          id: Date.now() + 1,
-          type: "completed",
-          message: `Your appointment with Dr. ${appointment.docId.firstName} ${appointment.docId.lastName} has been completed`,
-          timestamp: new Date(),
-          appointmentDate: appointment.slotDate,
-          recipientType: "patient",
-          recipientId: appointment.patientId._id,
-        };
-
-        // Get existing notifications from localStorage
-        const savedNotifications = localStorage.getItem("notifications");
-        let updatedNotifications = [];
-        
-        if (savedNotifications) {
-          try {
-            updatedNotifications = JSON.parse(savedNotifications);
-          } catch (error) {
-            console.error("Error parsing saved notifications:", error);
-            updatedNotifications = [];
-          }
-        }
-
-        // Add new notifications
-        updatedNotifications.unshift(doctorNotification);
-        updatedNotifications.unshift(patientNotification);
-
-        // Save back to localStorage
-        localStorage.setItem("notifications", JSON.stringify(updatedNotifications));
-        setAppointments((prevAppointments) =>
-          prevAppointments.map((apt) =>
-            apt._id === appointmentId ? { ...apt, status: "completed", paymentStatus: "paid" } : apt
-          )
-        );
-        fetchAppointments();
-        toast.success("Appointment completed successfully!");
-      } else {
-        // If API call fails, revert the local changes
-        setAppointments((prevAppointments) =>
-          prevAppointments.map((apt) =>
-            apt._id === appointmentId ? appointment : apt
-          )
-        );
-        toast.error("Failed to complete appointment on server");
-      }
-    } catch (error) {
-      console.error("Error completing appointment:", error);
-      // Revert local changes if there's an error
-      setAppointments((prevAppointments) =>
-        prevAppointments.map((apt) =>
-          apt._id === appointmentId ? appointment : apt
-        )
-      );
-      toast.error(error.response?.data?.message || "Failed to complete appointment");
-    }
-  };
   
 
   const cancelAppointment = async (appointmentId) => {
@@ -728,7 +444,6 @@ const Dashboard = () => {
 
   const AppointmentCard = ({ appointment, role, fetchAppointments }) => {
     const isDoctor = role === "doctor";
-    const navigate = useNavigate();
     const [showReviewForm, setShowReviewForm] = useState(false);
     const [rating, setRating] = useState(0);
     const [isSubmittingReview, setIsSubmittingReview] = useState(false);

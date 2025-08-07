@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { 
   FaPrescriptionBottle, 
   FaUserMd,
@@ -13,7 +12,6 @@ import apiService from '../services/apiService';
 import { useAuth } from '../context/AuthContext';
 
 const Prescriptions = () => {
-  const navigate = useNavigate();
   const { user } = useAuth();
   const [prescriptions, setPrescriptions] = useState([]);
   const [loading, setLoading] = useState(true);

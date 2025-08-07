@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import { FaUserMd, FaCalendarAlt, FaClock, FaPills, FaPlus, FaTrash, FaSearch, FaStethoscope } from 'react-icons/fa';
+import {FaCalendarAlt, FaClock, FaPills, FaTrash, FaSearch, FaStethoscope } from 'react-icons/fa';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 
 const NewPrescription = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [patients, setPatients] = useState([]);

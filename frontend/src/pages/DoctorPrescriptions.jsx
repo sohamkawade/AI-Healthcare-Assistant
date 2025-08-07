@@ -4,12 +4,10 @@ import { toast } from 'react-hot-toast';
 import { 
   FaEye, 
   FaTrash, 
-  FaUserMd, 
   FaUserInjured, 
   FaStethoscope, 
   FaCalendarAlt,
   FaFilePrescription,
-  FaSort,
   FaTimes
 } from 'react-icons/fa';
 import axios from 'axios';

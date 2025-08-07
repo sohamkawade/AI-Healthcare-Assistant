@@ -1,9 +1,9 @@
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 
+// const API_BASE_URL = "https://ai-healthcare-backend.onrender.com/api";
+const API_BASE_URL = "http://localhost:5001/api";
 
-// const API_BASE_URL = "http://localhost:5001/api";
-const API_BASE_URL = "https://ai-healthcare-backend.onrender.com/api";
 
 const apiService = {
   baseHeaders: { 
@@ -309,6 +309,26 @@ const apiService = {
       console.error('Error fetching prescriptions:', error);
       throw new Error(
         error.response?.data?.message || 'Failed to fetch prescriptions.'
+      );
+    }
+  },
+
+  // Get medical history for a patient
+  getMedicalHistory: async (patientId) => {
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error('No token provided. Please log in again.');
+
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}/patient/${patientId}/medical-history`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching medical history:', error);
+      throw new Error(
+        error.response?.data?.message || 'Failed to fetch medical history.'
       );
     }
   },

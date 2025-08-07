@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { FaUserMd, FaCalendarAlt, FaClock, FaSort, FaSortUp, FaSortDown, FaChevronDown, FaPhone, FaHospitalUser } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
@@ -7,7 +7,6 @@ import { useAuth } from '../context/AuthContext';
 
 const Patients = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { user, loading: authLoading } = useAuth();
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -140,29 +139,6 @@ const Patients = () => {
       : b.visitCount - a.visitCount;
   });
 
-  const handlePatientClick = (patient) => {
-    if (location.state?.from === 'write-prescription') {
-      navigate('/new-prescription', { 
-        state: { 
-          patientId: patient._id,
-          patientName: `${patient.firstName} ${patient.lastName}`,
-          doctorId: location.state.doctorId,
-          doctorName: location.state.doctorName,
-          specialization: location.state.specialization
-        }
-      });
-    } else {
-      navigate(`/patient-records/${patient._id}`, {
-        state: {
-          patientId: patient._id,
-          patientName: `${patient.firstName} ${patient.lastName}`,
-          doctorId: user._id,
-          doctorName: `${user.firstName} ${user.lastName}`,
-          specialization: user.specialization
-        }
-      });
-    }
-  };
 
   if (authLoading) {
     return (

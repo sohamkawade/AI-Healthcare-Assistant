@@ -1,18 +1,14 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   FaStethoscope,
-  FaUser,
   FaPaperPlane,
   FaTimes,
-  FaHeartbeat,
   FaTrash,
   FaQuestionCircle,
 } from "react-icons/fa";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 function Chatbot() {
-  const [showQuestions, setShowQuestions] = useState(true);
-  const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [messageInput, setMessageInput] = useState("");
   const [chatHistory, setChatHistory] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
@@ -1313,26 +1309,6 @@ Endocrinologist for hormonal causes
 Physiotherapist for exercises
 General Physician for monitoring`,
 
-    "back pain": `Back Pain Information:
-
-Care Instructions:
-Rest when needed
-Gentle stretching
-Take prescribed medicines
-Maintain posture
-
-Seek immediate medical attention if:
-Severe pain
-Numbness in legs
-Loss of bladder control
-Fever with pain
-
-Consult these doctors:
-Orthopedist for bone issues
-Physiotherapist for exercises
-Neurologist for nerve problems
-General Physician for initial assessment`,
-
     sciatica: `Sciatica Information:
 
 Care Instructions:
@@ -1960,7 +1936,7 @@ Pediatric Dentist for children`,
     }
 
     // Check all predefined answers
-    for (const [key, value] of Object.entries(predefinedQA)) {
+    for (const [key] of Object.entries(predefinedQA)) {
       const similarity = calculateSimilarity(messageLower, key);
       if (similarity > bestSimilarity && similarity >= SIMILARITY_THRESHOLD) {
         bestSimilarity = similarity;
@@ -2579,18 +2555,6 @@ Pediatric Dentist for children`,
     }
   };
 
-  // Function to Check if Question is in Hindi (including English text with Hindi meaning)
-  const isHindiQuestion = (message) => {
-    const hindiPattern = /[\u0900-\u097F]/; // Hindi Unicode range
-    return hindiPattern.test(message);
-  };
-
-  // Function to Check if Question is in English
-  const isEnglishQuestion = (message) => {
-    const englishPattern = /^[a-zA-Z\s.,!?'-]+$/; // Basic English pattern
-    return englishPattern.test(message);
-  };
-
   // Function to Generate Bot Response (API or Predefined)
   const generateBotResponse = async (message) => {
     setIsTyping(true);
@@ -2732,8 +2696,6 @@ Pediatric Dentist for children`,
       handleOutgoingMessage();
     }
   };
-
-  const quickQuestions = ["Common cold symptoms", "Boost immunity"];
 
   return (
     <div className="min-h-screen flex items-center justify-center p-1 sm:p-4 pt-16 sm:pt-20">

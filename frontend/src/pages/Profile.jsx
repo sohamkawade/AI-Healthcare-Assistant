@@ -241,7 +241,7 @@ const Profile = () => {
             Hello, {editedUser?.userType === "doctor" ? `Dr. ${editedUser?.firstName || "User"}` : editedUser?.firstName || "User"}!
           </h1>
           <p className="text-gray-600 mt-1 text-sm">
-            Here&apos;s your personal healthcare profile.
+            Here&#39;s your personal healthcare profile.
           </p>
         </div>
 

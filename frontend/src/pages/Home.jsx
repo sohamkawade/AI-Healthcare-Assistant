@@ -2,25 +2,21 @@ import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   FaStethoscope,
-  FaArrowRight,
-  FaStar,
   FaUserMd,
   FaUsers,
   FaRobot,
   FaCheckCircle,
 } from "react-icons/fa";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import aihome from "../assets/aihome.jpg";
 import apiService from "../services/apiService";
 import { toast } from "react-hot-toast";
-import { useAuth } from "../context/AuthContext";
 
 const Home = () => {
   const navigate = useNavigate();
   const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  const { user } = useAuth();
 
   useEffect(() => {
     const handleResize = () => {
