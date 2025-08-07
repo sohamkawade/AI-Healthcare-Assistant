@@ -434,7 +434,7 @@ const Dashboard = () => {
       // Revert local changes if there's an error
       setAppointments((prevAppointments) =>
         prevAppointments.map((apt) =>
-          apt._id === appointmentId ? appointment : apt
+          apt._id === appointmentId ? appointments : apt
         )
       );
       toast.error(error.response?.data?.message || "Failed to complete appointment");
