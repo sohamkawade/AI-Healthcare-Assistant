@@ -1,4 +1,5 @@
 const express = require('express');
+const app = express();
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
@@ -53,7 +54,6 @@ const paymentRoutes = require('./routes/paymentRoutes');
 // Load environment variables
 dotenv.config();
 
-const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
@@ -168,3 +168,4 @@ server.listen(PORT, () => {
 // Run the cleanup function immediately
 
 cleanupAppointments();
+
