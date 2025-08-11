@@ -16,6 +16,12 @@ require("dotenv").config();
 const db = require('./config/db');
 const { cleanupAppointments } = require('./cron/appointmentCleanup');
 
+app.use(express.static(path.join(__dirname, "client/build")));
+
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "client/build", "index.html"));
+});
+
 // Import models
 require('./models/Doctor');
 require('./models/Patient');
@@ -160,4 +166,5 @@ server.listen(PORT, () => {
 });
 
 // Run the cleanup function immediately
+
 cleanupAppointments();
